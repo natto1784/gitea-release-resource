@@ -1,5 +1,10 @@
 # GitLab Releases Resource
 
+** This resource is no longer maintained.  A newer, updated GitLab releases
+resource is available at
+https://github.com/orange-cloudfoundry/gitlab-release-resource.
+**
+
 Fetches and creates versioned GitLab resources.  GitLab resources are metadata attached to tags.  Note that `check` will skip tags that do not have associated resources.
 
 Note that this is still in development, and is still undergoing changes.  It may or may not work properly at the moment, but should hopefully be somewhat more stable soon.
