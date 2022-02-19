@@ -1,4 +1,4 @@
-[![Concourse CI](https://ci.weirdnatto.in/api/v1/teams/main/pipelines/gitea-release-resource/badge)](https://ci.weirdnatto.in/teams/main/pipelines/gitea-release-resource) [![Docker](https://img.shields.io/docker/image-size/natto17/gitea-release-resource.svg)](https://hub.docker.com/repository/docker/natto17/gitea-release-resorce)
+[![Concourse CI](https://ci.weirdnatto.in/api/v1/teams/main/pipelines/gitea-release-resource/badge)](https://ci.weirdnatto.in/teams/main/pipelines/gitea-release-resource) [![Docker](https://img.shields.io/docker/image-size/natto17/gitea-release-resource.svg)](https://hub.docker.com/repository/docker/natto17/gitea-release-resource)
 # WIP
 Forked from https://github.com/edtan/gitlab-release-resource
 
