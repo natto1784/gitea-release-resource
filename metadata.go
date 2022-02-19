@@ -2,7 +2,7 @@ package resource
 
 import "code.gitea.io/sdk/gitea"
 
-func metadataFromTag(tag *gitlab.Tag) []MetadataPair {
+func metadataFromTag(tag *gitea.Tag) []MetadataPair {
 	metadata := []MetadataPair{}
 
 	if tag.Name != "" {

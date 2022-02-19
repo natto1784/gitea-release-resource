@@ -43,8 +43,6 @@ var _ = Describe("In Command", func() {
 
 		destDir = filepath.Join(tmpDir, "destination")
 
-		giteaClient.DownloadProjectFileReturns(nil)
-
 		inRequest = resource.InRequest{}
 	})
 
@@ -103,19 +101,6 @@ var _ = Describe("In Command", func() {
 					command.Run(destDir, inRequest)
 
 					Ω(giteaClient.GetTagArgsForCall(0)).Should(Equal("v0.35.0"))
-				})
-
-				It("downloads only the files that match the globs", func() {
-					inResponse, inErr = command.Run(destDir, inRequest)
-
-					Expect(giteaClient.DownloadProjectFileCallCount()).To(Equal(2))
-					arg1, arg2 := giteaClient.DownloadProjectFileArgsForCall(0)
-					Ω(arg1).Should(Equal("example.txt"))
-					Ω(arg2).Should(Equal("path"))
-
-					arg1, arg2 = giteaClient.DownloadProjectFileArgsForCall(1)
-					Ω(arg1).Should(Equal("example.rtf"))
-					Ω(arg2).Should(Equal("path"))
 				})
 
 				It("does create the body, tag and version files", func() {
@@ -192,30 +177,6 @@ var _ = Describe("In Command", func() {
 					))
 				})
 
-				It("downloads all of the files", func() {
-					arg1, arg2 := giteaClient.DownloadProjectFileArgsForCall(0)
-					Ω(arg1).Should(Equal("example.txt"))
-					Ω(arg2).Should(Equal("path"))
-
-					arg1, arg2 = giteaClient.DownloadProjectFileArgsForCall(1)
-					Ω(arg1).Should(Equal("example.rtf"))
-					Ω(arg2).Should(Equal("path"))
-
-					arg1, arg2 = giteaClient.DownloadProjectFileArgsForCall(2)
-					Ω(arg1).Should(Equal("example.rtf"))
-					Ω(arg2).Should(Equal("path"))
-				})
-			})
-
-			Context("when downloading an asset fails", func() {
-				BeforeEach(func() {
-					giteaClient.DownloadProjectFileReturns(errors.New("not this time"))
-					inResponse, inErr = command.Run(destDir, inRequest)
-				})
-
-				It("returns an error", func() {
-					Ω(inErr).Should(HaveOccurred())
-				})
 			})
 		})
 	})

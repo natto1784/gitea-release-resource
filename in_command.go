@@ -12,7 +12,7 @@ import (
 )
 
 type InCommand struct {
-	gitea Gitea
+	gitea  Gitea
 	writer io.Writer
 }
 
@@ -23,7 +23,7 @@ type attachment struct {
 
 func NewInCommand(gitea Gitea, writer io.Writer) *InCommand {
 	return &InCommand{
-		gitea: gitea,
+		gitea:  gitea,
 		writer: writer,
 	}
 }
@@ -108,7 +108,7 @@ func (c *InCommand) Run(destDir string, request InRequest) (InResponse, error) {
 			continue
 		}
 
-		err := c.gitea.DownloadProjectFile(attachment.URL, path)
+		err := gitea.GetReleaseAttachment(attachment.URL, path)
 		if err != nil {
 			return InResponse{}, err
 		}

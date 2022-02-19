@@ -37,18 +37,6 @@ type FakeGitea struct {
 		result1 *gitea.Tag
 		result2 error
 	}
-	DownloadProjectFileStub        func(string, string) error
-	downloadProjectFileMutex       sync.RWMutex
-	downloadProjectFileArgsForCall []struct {
-		arg1 string
-		arg2 string
-	}
-	downloadProjectFileReturns struct {
-		result1 error
-	}
-	downloadProjectFileReturnsOnCall map[int]struct {
-		result1 error
-	}
 	GetTagStub        func(string) (*gitea.Tag, error)
 	getTagMutex       sync.RWMutex
 	getTagArgsForCall []struct {
@@ -99,19 +87,6 @@ type FakeGitea struct {
 	}
 	updateReleaseReturnsOnCall map[int]struct {
 		result1 *gitea.Release
-		result2 error
-	}
-	UploadProjectFileStub        func(string) (*gitea.ProjectFile, error)
-	uploadProjectFileMutex       sync.RWMutex
-	uploadProjectFileArgsForCall []struct {
-		arg1 string
-	}
-	uploadProjectFileReturns struct {
-		result1 *gitea.ProjectFile
-		result2 error
-	}
-	uploadProjectFileReturnsOnCall map[int]struct {
-		result1 *gitea.ProjectFile
 		result2 error
 	}
 	invocations      map[string][][]interface{}
@@ -244,67 +219,6 @@ func (fake *FakeGitea) CreateTagReturnsOnCall(i int, result1 *gitea.Tag, result2
 		result1 *gitea.Tag
 		result2 error
 	}{result1, result2}
-}
-
-func (fake *FakeGitea) DownloadProjectFile(arg1 string, arg2 string) error {
-	fake.downloadProjectFileMutex.Lock()
-	ret, specificReturn := fake.downloadProjectFileReturnsOnCall[len(fake.downloadProjectFileArgsForCall)]
-	fake.downloadProjectFileArgsForCall = append(fake.downloadProjectFileArgsForCall, struct {
-		arg1 string
-		arg2 string
-	}{arg1, arg2})
-	fake.recordInvocation("DownloadProjectFile", []interface{}{arg1, arg2})
-	fake.downloadProjectFileMutex.Unlock()
-	if fake.DownloadProjectFileStub != nil {
-		return fake.DownloadProjectFileStub(arg1, arg2)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.downloadProjectFileReturns
-	return fakeReturns.result1
-}
-
-func (fake *FakeGitea) DownloadProjectFileCallCount() int {
-	fake.downloadProjectFileMutex.RLock()
-	defer fake.downloadProjectFileMutex.RUnlock()
-	return len(fake.downloadProjectFileArgsForCall)
-}
-
-func (fake *FakeGitea) DownloadProjectFileCalls(stub func(string, string) error) {
-	fake.downloadProjectFileMutex.Lock()
-	defer fake.downloadProjectFileMutex.Unlock()
-	fake.DownloadProjectFileStub = stub
-}
-
-func (fake *FakeGitea) DownloadProjectFileArgsForCall(i int) (string, string) {
-	fake.downloadProjectFileMutex.RLock()
-	defer fake.downloadProjectFileMutex.RUnlock()
-	argsForCall := fake.downloadProjectFileArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
-}
-
-func (fake *FakeGitea) DownloadProjectFileReturns(result1 error) {
-	fake.downloadProjectFileMutex.Lock()
-	defer fake.downloadProjectFileMutex.Unlock()
-	fake.DownloadProjectFileStub = nil
-	fake.downloadProjectFileReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeGitea) DownloadProjectFileReturnsOnCall(i int, result1 error) {
-	fake.downloadProjectFileMutex.Lock()
-	defer fake.downloadProjectFileMutex.Unlock()
-	fake.DownloadProjectFileStub = nil
-	if fake.downloadProjectFileReturnsOnCall == nil {
-		fake.downloadProjectFileReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.downloadProjectFileReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
 }
 
 func (fake *FakeGitea) GetTag(arg1 string) (*gitea.Tag, error) {
@@ -552,69 +466,6 @@ func (fake *FakeGitea) UpdateReleaseReturnsOnCall(i int, result1 *gitea.Release,
 	}{result1, result2}
 }
 
-func (fake *FakeGitea) UploadProjectFile(arg1 string) (*gitea.ProjectFile, error) {
-	fake.uploadProjectFileMutex.Lock()
-	ret, specificReturn := fake.uploadProjectFileReturnsOnCall[len(fake.uploadProjectFileArgsForCall)]
-	fake.uploadProjectFileArgsForCall = append(fake.uploadProjectFileArgsForCall, struct {
-		arg1 string
-	}{arg1})
-	fake.recordInvocation("UploadProjectFile", []interface{}{arg1})
-	fake.uploadProjectFileMutex.Unlock()
-	if fake.UploadProjectFileStub != nil {
-		return fake.UploadProjectFileStub(arg1)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	fakeReturns := fake.uploadProjectFileReturns
-	return fakeReturns.result1, fakeReturns.result2
-}
-
-func (fake *FakeGitea) UploadProjectFileCallCount() int {
-	fake.uploadProjectFileMutex.RLock()
-	defer fake.uploadProjectFileMutex.RUnlock()
-	return len(fake.uploadProjectFileArgsForCall)
-}
-
-func (fake *FakeGitea) UploadProjectFileCalls(stub func(string) (*gitea.ProjectFile, error)) {
-	fake.uploadProjectFileMutex.Lock()
-	defer fake.uploadProjectFileMutex.Unlock()
-	fake.UploadProjectFileStub = stub
-}
-
-func (fake *FakeGitea) UploadProjectFileArgsForCall(i int) string {
-	fake.uploadProjectFileMutex.RLock()
-	defer fake.uploadProjectFileMutex.RUnlock()
-	argsForCall := fake.uploadProjectFileArgsForCall[i]
-	return argsForCall.arg1
-}
-
-func (fake *FakeGitea) UploadProjectFileReturns(result1 *gitea.ProjectFile, result2 error) {
-	fake.uploadProjectFileMutex.Lock()
-	defer fake.uploadProjectFileMutex.Unlock()
-	fake.UploadProjectFileStub = nil
-	fake.uploadProjectFileReturns = struct {
-		result1 *gitea.ProjectFile
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeGitea) UploadProjectFileReturnsOnCall(i int, result1 *gitea.ProjectFile, result2 error) {
-	fake.uploadProjectFileMutex.Lock()
-	defer fake.uploadProjectFileMutex.Unlock()
-	fake.UploadProjectFileStub = nil
-	if fake.uploadProjectFileReturnsOnCall == nil {
-		fake.uploadProjectFileReturnsOnCall = make(map[int]struct {
-			result1 *gitea.ProjectFile
-			result2 error
-		})
-	}
-	fake.uploadProjectFileReturnsOnCall[i] = struct {
-		result1 *gitea.ProjectFile
-		result2 error
-	}{result1, result2}
-}
-
 func (fake *FakeGitea) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -622,8 +473,6 @@ func (fake *FakeGitea) Invocations() map[string][][]interface{} {
 	defer fake.createReleaseMutex.RUnlock()
 	fake.createTagMutex.RLock()
 	defer fake.createTagMutex.RUnlock()
-	fake.downloadProjectFileMutex.RLock()
-	defer fake.downloadProjectFileMutex.RUnlock()
 	fake.getTagMutex.RLock()
 	defer fake.getTagMutex.RUnlock()
 	fake.listTagsMutex.RLock()
@@ -632,8 +481,6 @@ func (fake *FakeGitea) Invocations() map[string][][]interface{} {
 	defer fake.listTagsUntilMutex.RUnlock()
 	fake.updateReleaseMutex.RLock()
 	defer fake.updateReleaseMutex.RUnlock()
-	fake.uploadProjectFileMutex.RLock()
-	defer fake.uploadProjectFileMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

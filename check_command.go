@@ -3,8 +3,8 @@ package resource
 import (
 	"sort"
 
-	"github.com/cppforlife/go-semi-semantic/version"
 	"code.gitea.io/sdk/gitea"
+	"github.com/cppforlife/go-semi-semantic/version"
 )
 
 type CheckCommand struct {
@@ -47,9 +47,9 @@ func (c *CheckCommand) Run(request CheckRequest) ([]Version, error) {
 			continue
 		}
 
-/*		if tag.Release == nil {
-			continue
-		}*/
+		/*		if tag.Release == nil {
+				continue
+			}*/
 
 		filteredTags = append(filteredTags, tag)
 	}

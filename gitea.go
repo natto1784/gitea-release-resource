@@ -3,22 +3,16 @@ package resource
 import (
 	"crypto/tls"
 	"errors"
-	"fmt"
-	"io"
 	"net/http"
 	"net/url"
-	"os"
-	"path/filepath"
-	"strings"
 
 	"golang.org/x/oauth2"
 
 	"context"
 
-  "code.gitea.io/sdk/gitea"
+	"code.gitea.io/sdk/gitea"
 )
 
-//go:generate counterfeiter . Gitea
 
 type Gitea interface {
 	ListTags() ([]*gitea.Tag, error)
@@ -27,8 +21,6 @@ type Gitea interface {
 	CreateTag(tag_name string, ref string) (*gitea.Tag, error)
 	CreateRelease(tag_name string, description string) (*gitea.Release, error)
 	UpdateRelease(tag_name string, description string) (*gitea.Release, error)
-	UploadProjectFile(file string) (*gitea.ProjectFile, error)
-	DownloadProjectFile(url, file string) error
 }
 
 type GiteaClient struct {
@@ -42,6 +34,11 @@ func NewGiteaClient(source Source) (*GiteaClient, error) {
 	var httpClient = &http.Client{}
 	var ctx = context.TODO()
 
+	baseUrl, err := url.Parse(source.GiteaAPIURL)
+	if err != nil {
+		return nil, err
+	}
+
 	if source.Insecure {
 		httpClient.Transport = &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -49,15 +46,9 @@ func NewGiteaClient(source Source) (*GiteaClient, error) {
 		ctx = context.WithValue(ctx, oauth2.HTTPClient, httpClient)
 	}
 
-	client := gitea.NewClient(httpClient, source.AccessToken)
-
-	if source.GiteaAPIURL != "" {
-		var err error
-		baseUrl, err := url.Parse(source.GiteaAPIURL)
-		if err != nil {
-			return nil, err
-		}
-		client.SetBaseURL(baseUrl.String())
+	client, err := gitea.NewClient(baseUrl.String(), gitea.SetHTTPClient(httpClient), gitea.SetToken(source.AccessToken))
+	if err != nil {
+		return nil, err
 	}
 
 	return &GiteaClient{
@@ -241,65 +232,4 @@ func (g *GiteaClient) UpdateRelease(tag_name string, description string) (*gitea
 	}
 
 	return release, nil
-}
-
-func (g *GiteaClient) UploadProjectFile(file string) (*gitea.ProjectFile, error) {
-	projectFile, res, err := g.client.Projects.UploadFile(g.repository, file)
-	if err != nil {
-		return &gitea.ProjectFile{}, err
-	}
-
-	err = res.Body.Close()
-	if err != nil {
-		return nil, err
-	}
-
-	return projectFile, nil
-}
-
-func (g *GiteaClient) DownloadProjectFile(filePath, destPath string) error {
-	out, err := os.Create(destPath)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	// e.g. (group/project) + (/uploads/hash/filename)
-	filePathRef, err := url.Parse(g.repository + filePath)
-	if err != nil {
-		return err
-	}
-
-	// e.g. (https://gitea-instance/api/v4) + (/group/project/uploads/hash/filename)
-	projectFileUrl := g.client.BaseURL().ResolveReference(filePathRef)
-
-	// https://gitea.com/gitea-org/gitea-ce/issues/51447
-	nonApiUrl := strings.Replace(projectFileUrl.String(), "/api/v4", "", 1)
-	projectFileUrl, err = url.Parse(nonApiUrl)
-	if err != nil {
-		return err
-	}
-
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", projectFileUrl.String(), nil)
-	if err != nil {
-		return err
-	}
-	req.Header.Add("Private-Token", g.accessToken)
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to download file `%s`: HTTP status %d", filepath.Base(destPath), resp.StatusCode)
-	}
-
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"strings"
+
+	"code.gitea.io/sdk/gitea"
 )
 
 type OutCommand struct {
@@ -83,7 +85,7 @@ func (c *OutCommand) Run(sourceDir string, request OutRequest) (OutResponse, err
 		}
 
 		for _, filePath := range matches {
-			projectFile, err := c.gitea.UploadProjectFile(filePath)
+			projectFile, err := gitea.CreateReleaseAttachment(filePath)
 			if err != nil {
 				return OutResponse{}, err
 			}
