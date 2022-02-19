@@ -31,17 +31,32 @@ func (c *OutCommand) Run(sourceDir string, request OutRequest) (OutResponse, err
 
 	tag_name = request.Params.TagPrefix + tag_name
 
+	title := tag_name
+	if request.Params.TitlePath != "" {
+		title, err = c.fileContents(filepath.Join(sourceDir, request.Params.TitlePath))
+		if err != nil {
+			return OutResponse{}, err
+		}
+	}
+
+	body := "Auto-generated from Concourse Gitea Release Resource"
+	if request.Params.BodyPath != "" {
+		body, err = c.fileContents(filepath.Join(sourceDir, request.Params.TitlePath))
+		if err != nil {
+			return OutResponse{}, err
+		}
+	}
+
 	release, err := c.gitea.GetReleaseByTag(tag_name)
 
 	if release == nil {
-		release, err = c.gitea.CreateRelease(tag_name, "Auto-generated from Concourse Gitea Release Resource")
+		release, err = c.gitea.CreateRelease(title, tag_name, body)
 		if err != nil {
 			return OutResponse{}, err
 		}
 	}
 
 	// upload files
-	var fileLinks []string
 	for _, fileGlob := range params.Globs {
 		matches, err := filepath.Glob(filepath.Join(sourceDir, fileGlob))
 		if err != nil {
@@ -53,23 +68,22 @@ func (c *OutCommand) Run(sourceDir string, request OutRequest) (OutResponse, err
 		}
 
 		for _, filePath := range matches {
-			attachment, err := c.gitea.CreateAttachment(filePath, release.ID)
+			_, err := c.gitea.CreateAttachment(filePath, release.ID)
 			if err != nil {
 				return OutResponse{}, err
 			}
-			fileLinks = append(fileLinks, attachment.Name)
 		}
 	}
 
 	// update the release
-	_, err = c.gitea.EditRelease(tag_name, release.ID, strings.Join(fileLinks, "\n"))
+	_, err = c.gitea.EditRelease(title, tag_name, release.ID, body)
 	if err != nil {
 		return OutResponse{}, errors.New("could not get saved tag")
 	}
 
 	return OutResponse{
-		Version:  versionFromTag(release),
-		Metadata: metadataFromTag(release),
+		Version:  versionFromRelease(release),
+		Metadata: metadataFromRelease(release),
 	}, nil
 }
 

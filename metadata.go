@@ -2,7 +2,7 @@ package resource
 
 import "code.gitea.io/sdk/gitea"
 
-func metadataFromTag(release *gitea.Release) []MetadataPair {
+func metadataFromRelease(release *gitea.Release) []MetadataPair {
 	metadata := []MetadataPair{}
 
 	if release.TagName != "" {

@@ -1,7 +1,7 @@
 [![Concourse CI](https://ci.weirdnatto.in/api/v1/teams/main/pipelines/gitea-release-resource/badge)](https://ci.weirdnatto.in/teams/main/pipelines/gitea-release-resource) [![Docker](https://img.shields.io/docker/image-size/natto17/gitea-release-resource.svg)](https://hub.docker.com/repository/docker/natto17/gitea-release-resource)
 # WIP
 Forked from https://github.com/edtan/gitlab-release-resource
-
+*please help ;-;*
 
 # Gitea Releases Resource
 
@@ -109,10 +109,13 @@ matching the patterns in `globs` to the release.
 * `tag`: *Required.* A path to a file containing the name of the Git tag to use
   for the release.
 
+* `title`: *Optional.* A path to a file containing the name of the title
+  for the release. (Defaults to tag name)
+
 * `tag_prefix`: *Optional.*  If specified, the tag read from the file will be
 prepended with this string. This is useful for adding v in front of version numbers.
 
-* ~~`body`: *Optional.* A path to a file containing the body text of the release.~~ (Not yet supported)
+* `body`: *Optional.* A path to a file containing the body text of the release.
 
 * `globs`: *Optional.* A list of globs for files that will be uploaded alongside
   the created release.

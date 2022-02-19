@@ -24,8 +24,8 @@ type Gitea interface {
 	GetTag(tag_name string) (*gitea.Tag, error)
 	CreateTag(tag_name string, ref string) (*gitea.Tag, error)
 	GetReleaseByTag(tag_name string) (*gitea.Release, error)
-	CreateRelease(tag_name string, description string) (*gitea.Release, error)
-	EditRelease(tag_name string, release_id int64, description string) (*gitea.Release, error)
+	CreateRelease(title string, tag_name string, body string) (*gitea.Release, error)
+	EditRelease(title string, tag_name string, release_id int64, body string) (*gitea.Release, error)
 	CreateAttachment(filePath string, release_id int64) (*gitea.Attachment, error)
 	GetAttachment(filePath, destPath string) error
 }
@@ -214,11 +214,11 @@ func (g *GiteaClient) GetReleaseByTag(tag_name string) (*gitea.Release, error) {
 	return release, nil
 }
 
-func (g *GiteaClient) CreateRelease(tag_name string, description string) (*gitea.Release, error) {
+func (g *GiteaClient) CreateRelease(title string, tag_name string, body string) (*gitea.Release, error) {
 	opt := gitea.CreateReleaseOption{
-		Note:    description,
+		Note:    body,
 		TagName: tag_name,
-		Title:   "cock and balls full HD",
+		Title:   title,
 	}
 
 	release, res, err := g.client.CreateRelease(g.user, g.repository, opt)
@@ -238,12 +238,12 @@ func (g *GiteaClient) CreateRelease(tag_name string, description string) (*gitea
 	return release, nil
 }
 
-func (g *GiteaClient) EditRelease(tag_name string, release_id int64, description string) (*gitea.Release, error) {
+func (g *GiteaClient) EditRelease(title string, tag_name string, release_id int64, body string) (*gitea.Release, error) {
 
 	opt := gitea.EditReleaseOption{
-		Note:    description,
+		Note:    body,
 		TagName: tag_name,
-		Title:   "cock and balls full HD",
+		Title:   title,
 	}
 
 	release, res, err := g.client.EditRelease(g.user, g.repository, release_id, opt)

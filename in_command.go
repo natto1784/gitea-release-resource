@@ -116,8 +116,8 @@ func (c *InCommand) Run(destDir string, request InRequest) (InResponse, error) {
 	}
 
 	return InResponse{
-		Version:  versionFromTag(release),
-		Metadata: metadataFromTag(release),
+		Version:  versionFromRelease(release),
+		Metadata: metadataFromRelease(release),
 	}, nil
 }
 

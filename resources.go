@@ -56,6 +56,7 @@ type OutParams struct {
 	NamePath      string `json:"name"`
 	BodyPath      string `json:"body"`
 	TagPath       string `json:"tag"`
+	TitlePath     string `json:"title"`
 	CommitishPath string `json:"commitish"`
 	TagPrefix     string `json:"tag_prefix"`
 
