@@ -68,7 +68,7 @@ func (c *InCommand) Run(destDir string, request InRequest) (InResponse, error) {
 		return InResponse{}, err
 	}
 	var release *gitea.Release
-	release, _, err = c.gitea.GetReleaseByTag(request.Version.Tag)
+	release, err = c.gitea.GetReleaseByTag(request.Version.Tag)
 
 	if err != nil {
 		return InResponse{}, err

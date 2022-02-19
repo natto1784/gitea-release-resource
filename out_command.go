@@ -24,11 +24,6 @@ func NewOutCommand(gitea Gitea, writer io.Writer) *OutCommand {
 func (c *OutCommand) Run(sourceDir string, request OutRequest) (OutResponse, error) {
 	params := request.Params
 
-	// name, err := c.fileContents(filepath.Join(sourceDir, request.Params.NamePath))
-	// if err != nil {
-	// 	return OutResponse{}, err
-	// }
-
 	tag_name, err := c.fileContents(filepath.Join(sourceDir, request.Params.TagPath))
 	if err != nil {
 		return OutResponse{}, err
@@ -36,17 +31,10 @@ func (c *OutCommand) Run(sourceDir string, request OutRequest) (OutResponse, err
 
 	tag_name = request.Params.TagPrefix + tag_name
 
-	// if request.Params.BodyPath != "" {
-	// 	_, err := c.fileContents(filepath.Join(sourceDir, request.Params.BodyPath))
-	// 	if err != nil {
-	// 		return OutResponse{}, err
-	// 	}
-	// }
-
-	release, release_id, err := c.gitea.GetReleaseByTag(tag_name)
+	release, err := c.gitea.GetReleaseByTag(tag_name)
 
 	if release == nil {
-		_, release_id, err = c.gitea.CreateRelease(tag_name, "Auto-generated from Concourse Gitea Release Resource")
+		release, err = c.gitea.CreateRelease(tag_name, "Auto-generated from Concourse Gitea Release Resource")
 		if err != nil {
 			return OutResponse{}, err
 		}
@@ -65,7 +53,7 @@ func (c *OutCommand) Run(sourceDir string, request OutRequest) (OutResponse, err
 		}
 
 		for _, filePath := range matches {
-			attachment, err := c.gitea.CreateAttachment(filePath, release_id)
+			attachment, err := c.gitea.CreateAttachment(filePath, release.ID)
 			if err != nil {
 				return OutResponse{}, err
 			}
@@ -74,7 +62,7 @@ func (c *OutCommand) Run(sourceDir string, request OutRequest) (OutResponse, err
 	}
 
 	// update the release
-	_, err = c.gitea.EditRelease(tag_name, release_id, strings.Join(fileLinks, "\n"))
+	_, err = c.gitea.EditRelease(tag_name, release.ID, strings.Join(fileLinks, "\n"))
 	if err != nil {
 		return OutResponse{}, errors.New("could not get saved tag")
 	}

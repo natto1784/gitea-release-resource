@@ -2,7 +2,6 @@ package resource
 
 import (
 	"crypto/tls"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -24,8 +23,8 @@ type Gitea interface {
 	ListTagsUntil(tag_name string) ([]*gitea.Tag, error)
 	GetTag(tag_name string) (*gitea.Tag, error)
 	CreateTag(tag_name string, ref string) (*gitea.Tag, error)
-	GetReleaseByTag(tag_name string) (*gitea.Release, int64, error)
-	CreateRelease(tag_name string, description string) (*gitea.Release, int64, error)
+	GetReleaseByTag(tag_name string) (*gitea.Release, error)
+	CreateRelease(tag_name string, description string) (*gitea.Release, error)
 	EditRelease(tag_name string, release_id int64, description string) (*gitea.Release, error)
 	CreateAttachment(filePath string, release_id int64) (*gitea.Attachment, error)
 	GetAttachment(filePath, destPath string) error
@@ -196,43 +195,47 @@ func (g *GiteaClient) CreateTag(ref string, tag_name string) (*gitea.Tag, error)
 	return tag, nil
 }
 
-type ReleaseResp struct {
-	id int64 `json:"id"`
-}
-
-func (g *GiteaClient) GetReleaseByTag(tag_name string) (*gitea.Release, int64, error) {
+func (g *GiteaClient) GetReleaseByTag(tag_name string) (*gitea.Release, error) {
 	release, res, err := g.client.GetReleaseByTag(g.user, g.repository, tag_name)
 
-	if err != nil {
-		return &gitea.Release{}, 0, err
+	if res.StatusCode == http.StatusNotFound {
+		return nil, nil
 	}
-	defer res.Body.Close()
 
-	response := ReleaseResp{}
-	json.NewDecoder(res.Body).Decode(response)
-	return release, response.id, nil
+	err = res.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	if err != nil {
+		return &gitea.Release{}, err
+	}
+
+	return release, nil
 }
 
-func (g *GiteaClient) CreateRelease(tag_name string, description string) (*gitea.Release, int64, error) {
+func (g *GiteaClient) CreateRelease(tag_name string, description string) (*gitea.Release, error) {
 	opt := gitea.CreateReleaseOption{
 		Note:    description,
 		TagName: tag_name,
+		Title:   "cock and balls full HD",
 	}
 
 	release, res, err := g.client.CreateRelease(g.user, g.repository, opt)
 	if err != nil {
-		return &gitea.Release{}, 0, err
+		return &gitea.Release{}, err
+	}
+
+	err = res.Body.Close()
+	if err != nil {
+		return nil, err
 	}
 
 	if res.StatusCode == http.StatusConflict {
-		return nil, 0, errors.New("release already exists")
+		return nil, errors.New("release already exists")
 	}
 
-	defer res.Body.Close()
-
-	response := ReleaseResp{}
-	json.NewDecoder(res.Body).Decode(response)
-	return release, response.id, nil
+	return release, nil
 }
 
 func (g *GiteaClient) EditRelease(tag_name string, release_id int64, description string) (*gitea.Release, error) {
@@ -240,6 +243,7 @@ func (g *GiteaClient) EditRelease(tag_name string, release_id int64, description
 	opt := gitea.EditReleaseOption{
 		Note:    description,
 		TagName: tag_name,
+		Title:   "cock and balls full HD",
 	}
 
 	release, res, err := g.client.EditRelease(g.user, g.repository, release_id, opt)
@@ -273,7 +277,7 @@ func (g *GiteaClient) GetAttachment(filePath, destPath string) error {
 	}
 	defer out.Close()
 
-	filePathRef, err := url.Parse(g.repository + filePath)
+	filePathRef, err := url.Parse(filePath)
 	if err != nil {
 		return err
 	}

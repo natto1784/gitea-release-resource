@@ -72,7 +72,7 @@ func (c *CheckCommand) Run(request CheckRequest) ([]Version, error) {
 		return []Version{}, nil
 	}
 	latestTag := filteredTags[len(filteredTags)-1]
-	latestResource, _, err := c.gitea.GetReleaseByTag(latestTag.Name)
+	latestResource, err := c.gitea.GetReleaseByTag(latestTag.Name)
 	if err != nil {
 		return []Version{}, err
 	}
@@ -101,7 +101,7 @@ func (c *CheckCommand) Run(request CheckRequest) ([]Version, error) {
 
 	if !upToLatest {
 		// current version was removed; start over from latest
-		resource, _, err := c.gitea.GetReleaseByTag(filteredTags[len(filteredTags)-1].Name)
+		resource, err := c.gitea.GetReleaseByTag(filteredTags[len(filteredTags)-1].Name)
 		if err != nil {
 			return []Version{}, err
 		}
