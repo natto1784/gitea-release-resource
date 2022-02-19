@@ -3,18 +3,18 @@ package resource_test
 import (
 	"net/http"
 
-	. "github.com/edtan/gitlab-release-resource"
+	. "github.com/natto1784/gitea-release-resource"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"code.gitea.io/sdk/gitea"
 	"github.com/onsi/gomega/ghttp"
-	"github.com/xanzy/go-gitlab"
 )
 
-var _ = Describe("GitLab Client", func() {
+var _ = Describe("Gitea Client", func() {
 	var server *ghttp.Server
-	var client *GitlabClient
+	var client *GiteaClient
 	var source Source
 
 	BeforeEach(func() {
@@ -22,10 +22,10 @@ var _ = Describe("GitLab Client", func() {
 	})
 
 	JustBeforeEach(func() {
-		source.GitLabAPIURL = server.URL()
+		source.GiteaAPIURL = server.URL()
 
 		var err error
-		client, err = NewGitLabClient(source)
+		client, err = NewGiteaClient(source)
 		Ω(err).ShouldNot(HaveOccurred())
 	})
 
@@ -39,9 +39,9 @@ var _ = Describe("GitLab Client", func() {
 		})
 
 		It("returns an error if the API URL is bad", func() {
-			source.GitLabAPIURL = ":"
+			source.GiteaAPIURL = ":"
 
-			_, err := NewGitLabClient(source)
+			_, err := NewGiteaClient(source)
 			Ω(err).Should(HaveOccurred())
 		})
 	})
@@ -104,7 +104,7 @@ var _ = Describe("GitLab Client", func() {
 			}
 		})
 
-		Context("When GitLab responds successfully", func() {
+		Context("When Gitea responds successfully", func() {
 			BeforeEach(func() {
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
@@ -115,8 +115,8 @@ var _ = Describe("GitLab Client", func() {
 			})
 
 			It("Returns a populated github.Tag", func() {
-				expectedRelease := &gitlab.Tag{
-					Name: *gitlab.String("1"),
+				expectedRelease := &gitea.Tag{
+					Name: *gitea.String("1"),
 				}
 
 				release, err := client.GetTag("some-tag")

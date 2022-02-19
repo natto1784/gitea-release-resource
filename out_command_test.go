@@ -9,10 +9,10 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/xanzy/go-gitlab"
+	"code.gitea.io/sdk/gitea"
 
-	"github.com/edtan/gitlab-release-resource"
-	"github.com/edtan/gitlab-release-resource/fakes"
+	"github.com/natto1784/gitea-release-resource"
+	"github.com/natto1784/gitea-release-resource/fakes"
 )
 
 func file(path, contents string) {
@@ -22,7 +22,7 @@ func file(path, contents string) {
 var _ = Describe("Out Command", func() {
 	var (
 		command      *resource.OutCommand
-		gitlabClient *fakes.FakeGitLab
+		giteaClient *fakes.FakeGitea
 
 		sourcesDir string
 
@@ -32,22 +32,22 @@ var _ = Describe("Out Command", func() {
 	BeforeEach(func() {
 		var err error
 
-		gitlabClient = &fakes.FakeGitLab{}
-		command = resource.NewOutCommand(gitlabClient, ioutil.Discard)
+		giteaClient = &fakes.FakeGitea{}
+		command = resource.NewOutCommand(giteaClient, ioutil.Discard)
 
-		sourcesDir, err = ioutil.TempDir("", "gitlab-release")
+		sourcesDir, err = ioutil.TempDir("", "gitea-release")
 		Ω(err).ShouldNot(HaveOccurred())
 
-		gitlabClient.CreateReleaseStub = func(gh gitlab.Tag) (*gitlab.Tag, error) {
+		giteaClient.CreateReleaseStub = func(gh gitea.Tag) (*gitea.Tag, error) {
 			createdRel := gh
-			createdRel.ID = gitlab.Int(112)
-			createdRel.HTMLURL = gitlab.String("http://google.com")
-			createdRel.Name = gitlab.String("release-name")
-			createdRel.Body = gitlab.String("*markdown*")
+			createdRel.ID = gitea.Int(112)
+			createdRel.HTMLURL = gitea.String("http://google.com")
+			createdRel.Name = gitea.String("release-name")
+			createdRel.Body = gitea.String("*markdown*")
 			return &createdRel, nil
 		}
 
-		gitlabClient.UpdateReleaseStub = func(gh gitlab.Tag) (*gitlab.Tag, error) {
+		giteaClient.UpdateReleaseStub = func(gh gitea.Tag) (*gitea.Tag, error) {
 			return &gh, nil
 		}
 	})
@@ -57,34 +57,34 @@ var _ = Describe("Out Command", func() {
 	})
 
 	Context("when the release has already been created", func() {
-		existingAssets := []gitlab.ReleaseAsset{
+		existingAssets := []gitea.ReleaseAsset{
 			{
-				ID:   gitlab.Int(456789),
-				Name: gitlab.String("unicorns.txt"),
+				ID:   gitea.Int(456789),
+				Name: gitea.String("unicorns.txt"),
 			},
 			{
-				ID:    gitlab.Int(3450798),
-				Name:  gitlab.String("rainbows.txt"),
-				State: gitlab.String("new"),
+				ID:    gitea.Int(3450798),
+				Name:  gitea.String("rainbows.txt"),
+				State: gitea.String("new"),
 			},
 		}
 
-		existingReleases := []gitlab.Tag{
+		existingReleases := []gitea.Tag{
 			{
-				ID:    gitlab.Int(1),
-				Draft: gitlab.Bool(true),
+				ID:    gitea.Int(1),
+				Draft: gitea.Bool(true),
 			},
 			{
-				ID:      gitlab.Int(112),
-				TagName: gitlab.String("some-tag-name"),
-				Assets:  []gitlab.ReleaseAsset{existingAssets[0]},
-				Draft:   gitlab.Bool(false),
+				ID:      gitea.Int(112),
+				TagName: gitea.String("some-tag-name"),
+				Assets:  []gitea.ReleaseAsset{existingAssets[0]},
+				Draft:   gitea.Bool(false),
 			},
 		}
 
 		BeforeEach(func() {
-			gitlabClient.ListReleasesStub = func() ([]*gitlab.Tag, error) {
-				rels := []*gitlab.Tag{}
+			giteaClient.ListReleasesStub = func() ([]*gitea.Tag, error) {
+				rels := []*gitea.Tag{}
 				for _, r := range existingReleases {
 					c := r
 					rels = append(rels, &c)
@@ -93,8 +93,8 @@ var _ = Describe("Out Command", func() {
 				return rels, nil
 			}
 
-			gitlabClient.ListReleaseAssetsStub = func(gitlab.Tag) ([]*gitlab.ReleaseAsset, error) {
-				assets := []*gitlab.ReleaseAsset{}
+			giteaClient.ListReleaseAssetsStub = func(gitea.Tag) ([]*gitea.ReleaseAsset, error) {
+				assets := []*gitea.ReleaseAsset{}
 				for _, a := range existingAssets {
 					c := a
 					assets = append(assets, &c)
@@ -124,13 +124,13 @@ var _ = Describe("Out Command", func() {
 			_, err := command.Run(sourcesDir, request)
 			Ω(err).ShouldNot(HaveOccurred())
 
-			Ω(gitlabClient.ListReleaseAssetsCallCount()).Should(Equal(1))
-			Ω(gitlabClient.ListReleaseAssetsArgsForCall(0)).Should(Equal(existingReleases[1]))
+			Ω(giteaClient.ListReleaseAssetsCallCount()).Should(Equal(1))
+			Ω(giteaClient.ListReleaseAssetsArgsForCall(0)).Should(Equal(existingReleases[1]))
 
-			Ω(gitlabClient.DeleteReleaseAssetCallCount()).Should(Equal(2))
+			Ω(giteaClient.DeleteReleaseAssetCallCount()).Should(Equal(2))
 
-			Ω(gitlabClient.DeleteReleaseAssetArgsForCall(0)).Should(Equal(existingAssets[0]))
-			Ω(gitlabClient.DeleteReleaseAssetArgsForCall(1)).Should(Equal(existingAssets[1]))
+			Ω(giteaClient.DeleteReleaseAssetArgsForCall(0)).Should(Equal(existingAssets[0]))
+			Ω(giteaClient.DeleteReleaseAssetArgsForCall(1)).Should(Equal(existingAssets[1]))
 		})
 
 		Context("when not set as a draft release", func() {
@@ -142,9 +142,9 @@ var _ = Describe("Out Command", func() {
 				_, err := command.Run(sourcesDir, request)
 				Ω(err).ShouldNot(HaveOccurred())
 
-				Ω(gitlabClient.UpdateReleaseCallCount()).Should(Equal(1))
+				Ω(giteaClient.UpdateReleaseCallCount()).Should(Equal(1))
 
-				updatedRelease := gitlabClient.UpdateReleaseArgsForCall(0)
+				updatedRelease := giteaClient.UpdateReleaseArgsForCall(0)
 				Ω(*updatedRelease.Name).Should(Equal("v0.3.12"))
 				Ω(*updatedRelease.Draft).Should(Equal(false))
 			})
@@ -159,9 +159,9 @@ var _ = Describe("Out Command", func() {
 				_, err := command.Run(sourcesDir, request)
 				Ω(err).ShouldNot(HaveOccurred())
 
-				Ω(gitlabClient.UpdateReleaseCallCount()).Should(Equal(1))
+				Ω(giteaClient.UpdateReleaseCallCount()).Should(Equal(1))
 
-				updatedRelease := gitlabClient.UpdateReleaseArgsForCall(0)
+				updatedRelease := giteaClient.UpdateReleaseArgsForCall(0)
 				Ω(*updatedRelease.Name).Should(Equal("v0.3.12"))
 				Ω(*updatedRelease.Draft).Should(Equal(true))
 			})
@@ -176,9 +176,9 @@ var _ = Describe("Out Command", func() {
 				_, err := command.Run(sourcesDir, request)
 				Ω(err).ShouldNot(HaveOccurred())
 
-				Ω(gitlabClient.UpdateReleaseCallCount()).Should(Equal(1))
+				Ω(giteaClient.UpdateReleaseCallCount()).Should(Equal(1))
 
-				updatedRelease := gitlabClient.UpdateReleaseArgsForCall(0)
+				updatedRelease := giteaClient.UpdateReleaseArgsForCall(0)
 				Ω(*updatedRelease.Name).Should(Equal("v0.3.12"))
 				Ω(updatedRelease.Body).Should(BeNil())
 			})
@@ -189,12 +189,12 @@ var _ = Describe("Out Command", func() {
 				_, err := command.Run(sourcesDir, request)
 				Ω(err).ShouldNot(HaveOccurred())
 
-				Ω(gitlabClient.UpdateReleaseCallCount()).Should(Equal(1))
+				Ω(giteaClient.UpdateReleaseCallCount()).Should(Equal(1))
 
-				updatedRelease := gitlabClient.UpdateReleaseArgsForCall(0)
+				updatedRelease := giteaClient.UpdateReleaseArgsForCall(0)
 				Ω(*updatedRelease.Name).Should(Equal("v0.3.12"))
 				Ω(*updatedRelease.Body).Should(Equal("this is a great release"))
-				Ω(updatedRelease.TargetCommitish).Should(Equal(gitlab.String("")))
+				Ω(updatedRelease.TargetCommitish).Should(Equal(gitea.String("")))
 			})
 		})
 
@@ -209,12 +209,12 @@ var _ = Describe("Out Command", func() {
 				_, err := command.Run(sourcesDir, request)
 				Ω(err).ShouldNot(HaveOccurred())
 
-				Ω(gitlabClient.UpdateReleaseCallCount()).Should(Equal(1))
+				Ω(giteaClient.UpdateReleaseCallCount()).Should(Equal(1))
 
-				updatedRelease := gitlabClient.UpdateReleaseArgsForCall(0)
+				updatedRelease := giteaClient.UpdateReleaseArgsForCall(0)
 				Ω(*updatedRelease.Name).Should(Equal("v0.3.12"))
 				Ω(*updatedRelease.Body).Should(Equal("this is a great release"))
-				Ω(updatedRelease.TargetCommitish).Should(Equal(gitlab.String("1z22f1")))
+				Ω(updatedRelease.TargetCommitish).Should(Equal(gitea.String("1z22f1")))
 			})
 		})
 	})
@@ -242,27 +242,27 @@ var _ = Describe("Out Command", func() {
 				request.Params.CommitishPath = "commitish"
 			})
 
-			It("creates a release on gitlab with the commitish", func() {
+			It("creates a release on gitea with the commitish", func() {
 				_, err := command.Run(sourcesDir, request)
 				Ω(err).ShouldNot(HaveOccurred())
 
-				Ω(gitlabClient.CreateReleaseCallCount()).Should(Equal(1))
-				release := gitlabClient.CreateReleaseArgsForCall(0)
+				Ω(giteaClient.CreateReleaseCallCount()).Should(Equal(1))
+				release := giteaClient.CreateReleaseArgsForCall(0)
 
-				Ω(release.TargetCommitish).Should(Equal(gitlab.String("a2f4a3")))
+				Ω(release.TargetCommitish).Should(Equal(gitea.String("a2f4a3")))
 			})
 		})
 
 		Context("without a commitish", func() {
-			It("creates a release on gitlab without the commitish", func() {
+			It("creates a release on gitea without the commitish", func() {
 				_, err := command.Run(sourcesDir, request)
 				Ω(err).ShouldNot(HaveOccurred())
 
-				Ω(gitlabClient.CreateReleaseCallCount()).Should(Equal(1))
-				release := gitlabClient.CreateReleaseArgsForCall(0)
+				Ω(giteaClient.CreateReleaseCallCount()).Should(Equal(1))
+				release := giteaClient.CreateReleaseArgsForCall(0)
 
-				// gitlab treats empty string the same as not suppying the field.
-				Ω(release.TargetCommitish).Should(Equal(gitlab.String("")))
+				// gitea treats empty string the same as not suppying the field.
+				Ω(release.TargetCommitish).Should(Equal(gitea.String("")))
 			})
 		})
 
@@ -273,12 +273,12 @@ var _ = Describe("Out Command", func() {
 				request.Params.BodyPath = "body"
 			})
 
-			It("creates a release on gitlab", func() {
+			It("creates a release on gitea", func() {
 				_, err := command.Run(sourcesDir, request)
 				Ω(err).ShouldNot(HaveOccurred())
 
-				Ω(gitlabClient.CreateReleaseCallCount()).Should(Equal(1))
-				release := gitlabClient.CreateReleaseArgsForCall(0)
+				Ω(giteaClient.CreateReleaseCallCount()).Should(Equal(1))
+				release := giteaClient.CreateReleaseArgsForCall(0)
 
 				Ω(*release.Name).Should(Equal("v0.3.12"))
 				Ω(*release.TagName).Should(Equal("0.3.12"))
@@ -291,8 +291,8 @@ var _ = Describe("Out Command", func() {
 				_, err := command.Run(sourcesDir, request)
 				Ω(err).ShouldNot(HaveOccurred())
 
-				Ω(gitlabClient.CreateReleaseCallCount()).Should(Equal(1))
-				release := gitlabClient.CreateReleaseArgsForCall(0)
+				Ω(giteaClient.CreateReleaseCallCount()).Should(Equal(1))
+				release := giteaClient.CreateReleaseArgsForCall(0)
 
 				Ω(*release.Name).Should(Equal("v0.3.12"))
 				Ω(*release.TagName).Should(Equal("0.3.12"))
@@ -304,8 +304,8 @@ var _ = Describe("Out Command", func() {
 			_, err := command.Run(sourcesDir, request)
 			Ω(err).ShouldNot(HaveOccurred())
 
-			Ω(gitlabClient.CreateReleaseCallCount()).Should(Equal(1))
-			release := gitlabClient.CreateReleaseArgsForCall(0)
+			Ω(giteaClient.CreateReleaseCallCount()).Should(Equal(1))
+			release := giteaClient.CreateReleaseArgsForCall(0)
 
 			Ω(*release.Draft).Should(Equal(false))
 		})
@@ -318,12 +318,12 @@ var _ = Describe("Out Command", func() {
 				request.Source.PreRelease = true
 			})
 
-			It("creates a non-draft pre-release in gitlab", func() {
+			It("creates a non-draft pre-release in gitea", func() {
 				_, err := command.Run(sourcesDir, request)
 				Ω(err).ShouldNot(HaveOccurred())
 
-				Ω(gitlabClient.CreateReleaseCallCount()).Should(Equal(1))
-				release := gitlabClient.CreateReleaseArgsForCall(0)
+				Ω(giteaClient.CreateReleaseCallCount()).Should(Equal(1))
+				release := giteaClient.CreateReleaseArgsForCall(0)
 
 				Ω(*release.Name).Should(Equal("v0.3.12"))
 				Ω(*release.TagName).Should(Equal("0.3.12"))
@@ -354,12 +354,12 @@ var _ = Describe("Out Command", func() {
 				request.Source.PreRelease = true
 			})
 
-			It("creates a final release in gitlab", func() {
+			It("creates a final release in gitea", func() {
 				_, err := command.Run(sourcesDir, request)
 				Ω(err).ShouldNot(HaveOccurred())
 
-				Ω(gitlabClient.CreateReleaseCallCount()).Should(Equal(1))
-				release := gitlabClient.CreateReleaseArgsForCall(0)
+				Ω(giteaClient.CreateReleaseCallCount()).Should(Equal(1))
+				release := giteaClient.CreateReleaseArgsForCall(0)
 
 				Ω(*release.Name).Should(Equal("v0.3.12"))
 				Ω(*release.TagName).Should(Equal("0.3.12"))
@@ -388,12 +388,12 @@ var _ = Describe("Out Command", func() {
 				request.Source.Drafts = true
 			})
 
-			It("creates a release on gitlab in draft mode", func() {
+			It("creates a release on gitea in draft mode", func() {
 				_, err := command.Run(sourcesDir, request)
 				Ω(err).ShouldNot(HaveOccurred())
 
-				Ω(gitlabClient.CreateReleaseCallCount()).Should(Equal(1))
-				release := gitlabClient.CreateReleaseArgsForCall(0)
+				Ω(giteaClient.CreateReleaseCallCount()).Should(Equal(1))
+				release := giteaClient.CreateReleaseArgsForCall(0)
 
 				Ω(*release.Name).Should(Equal("v0.3.12"))
 				Ω(*release.TagName).Should(Equal("0.3.12"))
@@ -445,8 +445,8 @@ var _ = Describe("Out Command", func() {
 				_, err := command.Run(sourcesDir, request)
 				Ω(err).ShouldNot(HaveOccurred())
 
-				Ω(gitlabClient.UploadReleaseAssetCallCount()).Should(Equal(1))
-				release, name, file := gitlabClient.UploadReleaseAssetArgsForCall(0)
+				Ω(giteaClient.UploadReleaseAssetCallCount()).Should(Equal(1))
+				release, name, file := giteaClient.UploadReleaseAssetArgsForCall(0)
 
 				Ω(*release.ID).Should(Equal(112))
 				Ω(name).Should(Equal("great-file.tgz"))
@@ -479,23 +479,23 @@ var _ = Describe("Out Command", func() {
 			Context("when upload release asset fails", func() {
 				BeforeEach(func() {
 					existingAsset := false
-					gitlabClient.DeleteReleaseAssetStub = func(gitlab.ReleaseAsset) error {
+					giteaClient.DeleteReleaseAssetStub = func(gitea.ReleaseAsset) error {
 						existingAsset = false
 						return nil
 					}
 
-					gitlabClient.ListReleaseAssetsReturns([]*gitlab.ReleaseAsset{
+					giteaClient.ListReleaseAssetsReturns([]*gitea.ReleaseAsset{
 						{
-							ID:   gitlab.Int(456789),
-							Name: gitlab.String("great-file.tgz"),
+							ID:   gitea.Int(456789),
+							Name: gitea.String("great-file.tgz"),
 						},
 						{
-							ID:   gitlab.Int(3450798),
-							Name: gitlab.String("whatever.tgz"),
+							ID:   gitea.Int(3450798),
+							Name: gitea.String("whatever.tgz"),
 						},
 					}, nil)
 
-					gitlabClient.UploadReleaseAssetStub = func(rel gitlab.Tag, name string, file *os.File) error {
+					giteaClient.UploadReleaseAssetStub = func(rel gitea.Tag, name string, file *os.File) error {
 						Expect(ioutil.ReadAll(file)).To(Equal([]byte("matching")))
 						Expect(existingAsset).To(BeFalse())
 						existingAsset = true
@@ -507,17 +507,17 @@ var _ = Describe("Out Command", func() {
 					_, err := command.Run(sourcesDir, request)
 					Expect(err).To(Equal(errors.New("some-error")))
 
-					Ω(gitlabClient.UploadReleaseAssetCallCount()).Should(Equal(10))
-					Ω(gitlabClient.ListReleaseAssetsCallCount()).Should(Equal(10))
-					Ω(*gitlabClient.ListReleaseAssetsArgsForCall(9).ID).Should(Equal(112))
+					Ω(giteaClient.UploadReleaseAssetCallCount()).Should(Equal(10))
+					Ω(giteaClient.ListReleaseAssetsCallCount()).Should(Equal(10))
+					Ω(*giteaClient.ListReleaseAssetsArgsForCall(9).ID).Should(Equal(112))
 
-					actualRelease, actualName, actualFile := gitlabClient.UploadReleaseAssetArgsForCall(9)
+					actualRelease, actualName, actualFile := giteaClient.UploadReleaseAssetArgsForCall(9)
 					Ω(*actualRelease.ID).Should(Equal(112))
 					Ω(actualName).Should(Equal("great-file.tgz"))
 					Ω(actualFile.Name()).Should(Equal(filepath.Join(sourcesDir, "great-file.tgz")))
 
-					Ω(gitlabClient.DeleteReleaseAssetCallCount()).Should(Equal(10))
-					actualAsset := gitlabClient.DeleteReleaseAssetArgsForCall(8)
+					Ω(giteaClient.DeleteReleaseAssetCallCount()).Should(Equal(10))
+					actualAsset := giteaClient.DeleteReleaseAssetArgsForCall(8)
 					Expect(*actualAsset.ID).To(Equal(456789))
 				})
 
@@ -531,7 +531,7 @@ var _ = Describe("Out Command", func() {
 						results <- nil
 						results <- errors.New("6")
 
-						gitlabClient.UploadReleaseAssetStub = func(gitlab.Tag, string, *os.File) error {
+						giteaClient.UploadReleaseAssetStub = func(gitea.Tag, string, *os.File) error {
 							return <-results
 						}
 					})
@@ -540,17 +540,17 @@ var _ = Describe("Out Command", func() {
 						_, err := command.Run(sourcesDir, request)
 						Expect(err).ToNot(HaveOccurred())
 
-						Ω(gitlabClient.UploadReleaseAssetCallCount()).Should(Equal(5))
-						Ω(gitlabClient.ListReleaseAssetsCallCount()).Should(Equal(4))
-						Ω(*gitlabClient.ListReleaseAssetsArgsForCall(3).ID).Should(Equal(112))
+						Ω(giteaClient.UploadReleaseAssetCallCount()).Should(Equal(5))
+						Ω(giteaClient.ListReleaseAssetsCallCount()).Should(Equal(4))
+						Ω(*giteaClient.ListReleaseAssetsArgsForCall(3).ID).Should(Equal(112))
 
-						actualRelease, actualName, actualFile := gitlabClient.UploadReleaseAssetArgsForCall(4)
+						actualRelease, actualName, actualFile := giteaClient.UploadReleaseAssetArgsForCall(4)
 						Ω(*actualRelease.ID).Should(Equal(112))
 						Ω(actualName).Should(Equal("great-file.tgz"))
 						Ω(actualFile.Name()).Should(Equal(filepath.Join(sourcesDir, "great-file.tgz")))
 
-						Ω(gitlabClient.DeleteReleaseAssetCallCount()).Should(Equal(4))
-						actualAsset := gitlabClient.DeleteReleaseAssetArgsForCall(3)
+						Ω(giteaClient.DeleteReleaseAssetCallCount()).Should(Equal(4))
+						actualAsset := giteaClient.DeleteReleaseAssetArgsForCall(3)
 						Expect(*actualAsset.ID).To(Equal(456789))
 					})
 				})
@@ -578,8 +578,8 @@ var _ = Describe("Out Command", func() {
 				_, err := command.Run(sourcesDir, request)
 				Ω(err).ShouldNot(HaveOccurred())
 
-				Ω(gitlabClient.CreateReleaseCallCount()).Should(Equal(1))
-				release := gitlabClient.CreateReleaseArgsForCall(0)
+				Ω(giteaClient.CreateReleaseCallCount()).Should(Equal(1))
+				release := giteaClient.CreateReleaseArgsForCall(0)
 
 				Ω(*release.Name).Should(Equal("v0.3.12"))
 				Ω(*release.TagName).Should(Equal("version-0.3.12"))

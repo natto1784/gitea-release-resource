@@ -3,7 +3,7 @@ package resource
 import (
 	"regexp"
 
-	"github.com/xanzy/go-gitlab"
+	"code.gitea.io/sdk/gitea"
 )
 
 var defaultTagFilter = "^v?([^v].*)"
@@ -31,7 +31,7 @@ func (vp *versionParser) parse(tag string) string {
 	return ""
 }
 
-func versionFromTag(tag *gitlab.Tag) Version {
+func versionFromTag(tag *gitea.Tag) Version {
 	return Version{
 		Tag:       tag.Name,
 		CommitSHA: tag.Commit.ID,

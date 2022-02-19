@@ -3,7 +3,7 @@ package resource
 type Source struct {
 	Repository string `json:"repository"`
 
-	GitLabAPIURL string `json:"gitlab_api_url"`
+	GiteaAPIURL string `json:"gitea_api_url"`
 	AccessToken  string `json:"access_token"`
 	Insecure     bool   `json:"insecure"`
 

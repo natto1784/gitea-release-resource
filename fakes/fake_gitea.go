@@ -4,37 +4,37 @@ package fakes
 import (
 	sync "sync"
 
-	resource "github.com/edtan/gitlab-release-resource"
-	gitlab "github.com/xanzy/go-gitlab"
+	resource "github.com/natto1784/gitea-release-resource"
+	gitea "code.gitea.io/sdk/gitea"
 )
 
-type FakeGitLab struct {
-	CreateReleaseStub        func(string, string) (*gitlab.Release, error)
+type FakeGitea struct {
+	CreateReleaseStub        func(string, string) (*gitea.Release, error)
 	createReleaseMutex       sync.RWMutex
 	createReleaseArgsForCall []struct {
 		arg1 string
 		arg2 string
 	}
 	createReleaseReturns struct {
-		result1 *gitlab.Release
+		result1 *gitea.Release
 		result2 error
 	}
 	createReleaseReturnsOnCall map[int]struct {
-		result1 *gitlab.Release
+		result1 *gitea.Release
 		result2 error
 	}
-	CreateTagStub        func(string, string) (*gitlab.Tag, error)
+	CreateTagStub        func(string, string) (*gitea.Tag, error)
 	createTagMutex       sync.RWMutex
 	createTagArgsForCall []struct {
 		arg1 string
 		arg2 string
 	}
 	createTagReturns struct {
-		result1 *gitlab.Tag
+		result1 *gitea.Tag
 		result2 error
 	}
 	createTagReturnsOnCall map[int]struct {
-		result1 *gitlab.Tag
+		result1 *gitea.Tag
 		result2 error
 	}
 	DownloadProjectFileStub        func(string, string) error
@@ -49,76 +49,76 @@ type FakeGitLab struct {
 	downloadProjectFileReturnsOnCall map[int]struct {
 		result1 error
 	}
-	GetTagStub        func(string) (*gitlab.Tag, error)
+	GetTagStub        func(string) (*gitea.Tag, error)
 	getTagMutex       sync.RWMutex
 	getTagArgsForCall []struct {
 		arg1 string
 	}
 	getTagReturns struct {
-		result1 *gitlab.Tag
+		result1 *gitea.Tag
 		result2 error
 	}
 	getTagReturnsOnCall map[int]struct {
-		result1 *gitlab.Tag
+		result1 *gitea.Tag
 		result2 error
 	}
-	ListTagsStub        func() ([]*gitlab.Tag, error)
+	ListTagsStub        func() ([]*gitea.Tag, error)
 	listTagsMutex       sync.RWMutex
 	listTagsArgsForCall []struct {
 	}
 	listTagsReturns struct {
-		result1 []*gitlab.Tag
+		result1 []*gitea.Tag
 		result2 error
 	}
 	listTagsReturnsOnCall map[int]struct {
-		result1 []*gitlab.Tag
+		result1 []*gitea.Tag
 		result2 error
 	}
-	ListTagsUntilStub        func(string) ([]*gitlab.Tag, error)
+	ListTagsUntilStub        func(string) ([]*gitea.Tag, error)
 	listTagsUntilMutex       sync.RWMutex
 	listTagsUntilArgsForCall []struct {
 		arg1 string
 	}
 	listTagsUntilReturns struct {
-		result1 []*gitlab.Tag
+		result1 []*gitea.Tag
 		result2 error
 	}
 	listTagsUntilReturnsOnCall map[int]struct {
-		result1 []*gitlab.Tag
+		result1 []*gitea.Tag
 		result2 error
 	}
-	UpdateReleaseStub        func(string, string) (*gitlab.Release, error)
+	UpdateReleaseStub        func(string, string) (*gitea.Release, error)
 	updateReleaseMutex       sync.RWMutex
 	updateReleaseArgsForCall []struct {
 		arg1 string
 		arg2 string
 	}
 	updateReleaseReturns struct {
-		result1 *gitlab.Release
+		result1 *gitea.Release
 		result2 error
 	}
 	updateReleaseReturnsOnCall map[int]struct {
-		result1 *gitlab.Release
+		result1 *gitea.Release
 		result2 error
 	}
-	UploadProjectFileStub        func(string) (*gitlab.ProjectFile, error)
+	UploadProjectFileStub        func(string) (*gitea.ProjectFile, error)
 	uploadProjectFileMutex       sync.RWMutex
 	uploadProjectFileArgsForCall []struct {
 		arg1 string
 	}
 	uploadProjectFileReturns struct {
-		result1 *gitlab.ProjectFile
+		result1 *gitea.ProjectFile
 		result2 error
 	}
 	uploadProjectFileReturnsOnCall map[int]struct {
-		result1 *gitlab.ProjectFile
+		result1 *gitea.ProjectFile
 		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeGitLab) CreateRelease(arg1 string, arg2 string) (*gitlab.Release, error) {
+func (fake *FakeGitea) CreateRelease(arg1 string, arg2 string) (*gitea.Release, error) {
 	fake.createReleaseMutex.Lock()
 	ret, specificReturn := fake.createReleaseReturnsOnCall[len(fake.createReleaseArgsForCall)]
 	fake.createReleaseArgsForCall = append(fake.createReleaseArgsForCall, struct {
@@ -137,52 +137,52 @@ func (fake *FakeGitLab) CreateRelease(arg1 string, arg2 string) (*gitlab.Release
 	return fakeReturns.result1, fakeReturns.result2
 }
 
-func (fake *FakeGitLab) CreateReleaseCallCount() int {
+func (fake *FakeGitea) CreateReleaseCallCount() int {
 	fake.createReleaseMutex.RLock()
 	defer fake.createReleaseMutex.RUnlock()
 	return len(fake.createReleaseArgsForCall)
 }
 
-func (fake *FakeGitLab) CreateReleaseCalls(stub func(string, string) (*gitlab.Release, error)) {
+func (fake *FakeGitea) CreateReleaseCalls(stub func(string, string) (*gitea.Release, error)) {
 	fake.createReleaseMutex.Lock()
 	defer fake.createReleaseMutex.Unlock()
 	fake.CreateReleaseStub = stub
 }
 
-func (fake *FakeGitLab) CreateReleaseArgsForCall(i int) (string, string) {
+func (fake *FakeGitea) CreateReleaseArgsForCall(i int) (string, string) {
 	fake.createReleaseMutex.RLock()
 	defer fake.createReleaseMutex.RUnlock()
 	argsForCall := fake.createReleaseArgsForCall[i]
 	return argsForCall.arg1, argsForCall.arg2
 }
 
-func (fake *FakeGitLab) CreateReleaseReturns(result1 *gitlab.Release, result2 error) {
+func (fake *FakeGitea) CreateReleaseReturns(result1 *gitea.Release, result2 error) {
 	fake.createReleaseMutex.Lock()
 	defer fake.createReleaseMutex.Unlock()
 	fake.CreateReleaseStub = nil
 	fake.createReleaseReturns = struct {
-		result1 *gitlab.Release
+		result1 *gitea.Release
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeGitLab) CreateReleaseReturnsOnCall(i int, result1 *gitlab.Release, result2 error) {
+func (fake *FakeGitea) CreateReleaseReturnsOnCall(i int, result1 *gitea.Release, result2 error) {
 	fake.createReleaseMutex.Lock()
 	defer fake.createReleaseMutex.Unlock()
 	fake.CreateReleaseStub = nil
 	if fake.createReleaseReturnsOnCall == nil {
 		fake.createReleaseReturnsOnCall = make(map[int]struct {
-			result1 *gitlab.Release
+			result1 *gitea.Release
 			result2 error
 		})
 	}
 	fake.createReleaseReturnsOnCall[i] = struct {
-		result1 *gitlab.Release
+		result1 *gitea.Release
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeGitLab) CreateTag(arg1 string, arg2 string) (*gitlab.Tag, error) {
+func (fake *FakeGitea) CreateTag(arg1 string, arg2 string) (*gitea.Tag, error) {
 	fake.createTagMutex.Lock()
 	ret, specificReturn := fake.createTagReturnsOnCall[len(fake.createTagArgsForCall)]
 	fake.createTagArgsForCall = append(fake.createTagArgsForCall, struct {
@@ -201,52 +201,52 @@ func (fake *FakeGitLab) CreateTag(arg1 string, arg2 string) (*gitlab.Tag, error)
 	return fakeReturns.result1, fakeReturns.result2
 }
 
-func (fake *FakeGitLab) CreateTagCallCount() int {
+func (fake *FakeGitea) CreateTagCallCount() int {
 	fake.createTagMutex.RLock()
 	defer fake.createTagMutex.RUnlock()
 	return len(fake.createTagArgsForCall)
 }
 
-func (fake *FakeGitLab) CreateTagCalls(stub func(string, string) (*gitlab.Tag, error)) {
+func (fake *FakeGitea) CreateTagCalls(stub func(string, string) (*gitea.Tag, error)) {
 	fake.createTagMutex.Lock()
 	defer fake.createTagMutex.Unlock()
 	fake.CreateTagStub = stub
 }
 
-func (fake *FakeGitLab) CreateTagArgsForCall(i int) (string, string) {
+func (fake *FakeGitea) CreateTagArgsForCall(i int) (string, string) {
 	fake.createTagMutex.RLock()
 	defer fake.createTagMutex.RUnlock()
 	argsForCall := fake.createTagArgsForCall[i]
 	return argsForCall.arg1, argsForCall.arg2
 }
 
-func (fake *FakeGitLab) CreateTagReturns(result1 *gitlab.Tag, result2 error) {
+func (fake *FakeGitea) CreateTagReturns(result1 *gitea.Tag, result2 error) {
 	fake.createTagMutex.Lock()
 	defer fake.createTagMutex.Unlock()
 	fake.CreateTagStub = nil
 	fake.createTagReturns = struct {
-		result1 *gitlab.Tag
+		result1 *gitea.Tag
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeGitLab) CreateTagReturnsOnCall(i int, result1 *gitlab.Tag, result2 error) {
+func (fake *FakeGitea) CreateTagReturnsOnCall(i int, result1 *gitea.Tag, result2 error) {
 	fake.createTagMutex.Lock()
 	defer fake.createTagMutex.Unlock()
 	fake.CreateTagStub = nil
 	if fake.createTagReturnsOnCall == nil {
 		fake.createTagReturnsOnCall = make(map[int]struct {
-			result1 *gitlab.Tag
+			result1 *gitea.Tag
 			result2 error
 		})
 	}
 	fake.createTagReturnsOnCall[i] = struct {
-		result1 *gitlab.Tag
+		result1 *gitea.Tag
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeGitLab) DownloadProjectFile(arg1 string, arg2 string) error {
+func (fake *FakeGitea) DownloadProjectFile(arg1 string, arg2 string) error {
 	fake.downloadProjectFileMutex.Lock()
 	ret, specificReturn := fake.downloadProjectFileReturnsOnCall[len(fake.downloadProjectFileArgsForCall)]
 	fake.downloadProjectFileArgsForCall = append(fake.downloadProjectFileArgsForCall, struct {
@@ -265,26 +265,26 @@ func (fake *FakeGitLab) DownloadProjectFile(arg1 string, arg2 string) error {
 	return fakeReturns.result1
 }
 
-func (fake *FakeGitLab) DownloadProjectFileCallCount() int {
+func (fake *FakeGitea) DownloadProjectFileCallCount() int {
 	fake.downloadProjectFileMutex.RLock()
 	defer fake.downloadProjectFileMutex.RUnlock()
 	return len(fake.downloadProjectFileArgsForCall)
 }
 
-func (fake *FakeGitLab) DownloadProjectFileCalls(stub func(string, string) error) {
+func (fake *FakeGitea) DownloadProjectFileCalls(stub func(string, string) error) {
 	fake.downloadProjectFileMutex.Lock()
 	defer fake.downloadProjectFileMutex.Unlock()
 	fake.DownloadProjectFileStub = stub
 }
 
-func (fake *FakeGitLab) DownloadProjectFileArgsForCall(i int) (string, string) {
+func (fake *FakeGitea) DownloadProjectFileArgsForCall(i int) (string, string) {
 	fake.downloadProjectFileMutex.RLock()
 	defer fake.downloadProjectFileMutex.RUnlock()
 	argsForCall := fake.downloadProjectFileArgsForCall[i]
 	return argsForCall.arg1, argsForCall.arg2
 }
 
-func (fake *FakeGitLab) DownloadProjectFileReturns(result1 error) {
+func (fake *FakeGitea) DownloadProjectFileReturns(result1 error) {
 	fake.downloadProjectFileMutex.Lock()
 	defer fake.downloadProjectFileMutex.Unlock()
 	fake.DownloadProjectFileStub = nil
@@ -293,7 +293,7 @@ func (fake *FakeGitLab) DownloadProjectFileReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakeGitLab) DownloadProjectFileReturnsOnCall(i int, result1 error) {
+func (fake *FakeGitea) DownloadProjectFileReturnsOnCall(i int, result1 error) {
 	fake.downloadProjectFileMutex.Lock()
 	defer fake.downloadProjectFileMutex.Unlock()
 	fake.DownloadProjectFileStub = nil
@@ -307,7 +307,7 @@ func (fake *FakeGitLab) DownloadProjectFileReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeGitLab) GetTag(arg1 string) (*gitlab.Tag, error) {
+func (fake *FakeGitea) GetTag(arg1 string) (*gitea.Tag, error) {
 	fake.getTagMutex.Lock()
 	ret, specificReturn := fake.getTagReturnsOnCall[len(fake.getTagArgsForCall)]
 	fake.getTagArgsForCall = append(fake.getTagArgsForCall, struct {
@@ -325,52 +325,52 @@ func (fake *FakeGitLab) GetTag(arg1 string) (*gitlab.Tag, error) {
 	return fakeReturns.result1, fakeReturns.result2
 }
 
-func (fake *FakeGitLab) GetTagCallCount() int {
+func (fake *FakeGitea) GetTagCallCount() int {
 	fake.getTagMutex.RLock()
 	defer fake.getTagMutex.RUnlock()
 	return len(fake.getTagArgsForCall)
 }
 
-func (fake *FakeGitLab) GetTagCalls(stub func(string) (*gitlab.Tag, error)) {
+func (fake *FakeGitea) GetTagCalls(stub func(string) (*gitea.Tag, error)) {
 	fake.getTagMutex.Lock()
 	defer fake.getTagMutex.Unlock()
 	fake.GetTagStub = stub
 }
 
-func (fake *FakeGitLab) GetTagArgsForCall(i int) string {
+func (fake *FakeGitea) GetTagArgsForCall(i int) string {
 	fake.getTagMutex.RLock()
 	defer fake.getTagMutex.RUnlock()
 	argsForCall := fake.getTagArgsForCall[i]
 	return argsForCall.arg1
 }
 
-func (fake *FakeGitLab) GetTagReturns(result1 *gitlab.Tag, result2 error) {
+func (fake *FakeGitea) GetTagReturns(result1 *gitea.Tag, result2 error) {
 	fake.getTagMutex.Lock()
 	defer fake.getTagMutex.Unlock()
 	fake.GetTagStub = nil
 	fake.getTagReturns = struct {
-		result1 *gitlab.Tag
+		result1 *gitea.Tag
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeGitLab) GetTagReturnsOnCall(i int, result1 *gitlab.Tag, result2 error) {
+func (fake *FakeGitea) GetTagReturnsOnCall(i int, result1 *gitea.Tag, result2 error) {
 	fake.getTagMutex.Lock()
 	defer fake.getTagMutex.Unlock()
 	fake.GetTagStub = nil
 	if fake.getTagReturnsOnCall == nil {
 		fake.getTagReturnsOnCall = make(map[int]struct {
-			result1 *gitlab.Tag
+			result1 *gitea.Tag
 			result2 error
 		})
 	}
 	fake.getTagReturnsOnCall[i] = struct {
-		result1 *gitlab.Tag
+		result1 *gitea.Tag
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeGitLab) ListTags() ([]*gitlab.Tag, error) {
+func (fake *FakeGitea) ListTags() ([]*gitea.Tag, error) {
 	fake.listTagsMutex.Lock()
 	ret, specificReturn := fake.listTagsReturnsOnCall[len(fake.listTagsArgsForCall)]
 	fake.listTagsArgsForCall = append(fake.listTagsArgsForCall, struct {
@@ -387,45 +387,45 @@ func (fake *FakeGitLab) ListTags() ([]*gitlab.Tag, error) {
 	return fakeReturns.result1, fakeReturns.result2
 }
 
-func (fake *FakeGitLab) ListTagsCallCount() int {
+func (fake *FakeGitea) ListTagsCallCount() int {
 	fake.listTagsMutex.RLock()
 	defer fake.listTagsMutex.RUnlock()
 	return len(fake.listTagsArgsForCall)
 }
 
-func (fake *FakeGitLab) ListTagsCalls(stub func() ([]*gitlab.Tag, error)) {
+func (fake *FakeGitea) ListTagsCalls(stub func() ([]*gitea.Tag, error)) {
 	fake.listTagsMutex.Lock()
 	defer fake.listTagsMutex.Unlock()
 	fake.ListTagsStub = stub
 }
 
-func (fake *FakeGitLab) ListTagsReturns(result1 []*gitlab.Tag, result2 error) {
+func (fake *FakeGitea) ListTagsReturns(result1 []*gitea.Tag, result2 error) {
 	fake.listTagsMutex.Lock()
 	defer fake.listTagsMutex.Unlock()
 	fake.ListTagsStub = nil
 	fake.listTagsReturns = struct {
-		result1 []*gitlab.Tag
+		result1 []*gitea.Tag
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeGitLab) ListTagsReturnsOnCall(i int, result1 []*gitlab.Tag, result2 error) {
+func (fake *FakeGitea) ListTagsReturnsOnCall(i int, result1 []*gitea.Tag, result2 error) {
 	fake.listTagsMutex.Lock()
 	defer fake.listTagsMutex.Unlock()
 	fake.ListTagsStub = nil
 	if fake.listTagsReturnsOnCall == nil {
 		fake.listTagsReturnsOnCall = make(map[int]struct {
-			result1 []*gitlab.Tag
+			result1 []*gitea.Tag
 			result2 error
 		})
 	}
 	fake.listTagsReturnsOnCall[i] = struct {
-		result1 []*gitlab.Tag
+		result1 []*gitea.Tag
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeGitLab) ListTagsUntil(arg1 string) ([]*gitlab.Tag, error) {
+func (fake *FakeGitea) ListTagsUntil(arg1 string) ([]*gitea.Tag, error) {
 	fake.listTagsUntilMutex.Lock()
 	ret, specificReturn := fake.listTagsUntilReturnsOnCall[len(fake.listTagsUntilArgsForCall)]
 	fake.listTagsUntilArgsForCall = append(fake.listTagsUntilArgsForCall, struct {
@@ -443,52 +443,52 @@ func (fake *FakeGitLab) ListTagsUntil(arg1 string) ([]*gitlab.Tag, error) {
 	return fakeReturns.result1, fakeReturns.result2
 }
 
-func (fake *FakeGitLab) ListTagsUntilCallCount() int {
+func (fake *FakeGitea) ListTagsUntilCallCount() int {
 	fake.listTagsUntilMutex.RLock()
 	defer fake.listTagsUntilMutex.RUnlock()
 	return len(fake.listTagsUntilArgsForCall)
 }
 
-func (fake *FakeGitLab) ListTagsUntilCalls(stub func(string) ([]*gitlab.Tag, error)) {
+func (fake *FakeGitea) ListTagsUntilCalls(stub func(string) ([]*gitea.Tag, error)) {
 	fake.listTagsUntilMutex.Lock()
 	defer fake.listTagsUntilMutex.Unlock()
 	fake.ListTagsUntilStub = stub
 }
 
-func (fake *FakeGitLab) ListTagsUntilArgsForCall(i int) string {
+func (fake *FakeGitea) ListTagsUntilArgsForCall(i int) string {
 	fake.listTagsUntilMutex.RLock()
 	defer fake.listTagsUntilMutex.RUnlock()
 	argsForCall := fake.listTagsUntilArgsForCall[i]
 	return argsForCall.arg1
 }
 
-func (fake *FakeGitLab) ListTagsUntilReturns(result1 []*gitlab.Tag, result2 error) {
+func (fake *FakeGitea) ListTagsUntilReturns(result1 []*gitea.Tag, result2 error) {
 	fake.listTagsUntilMutex.Lock()
 	defer fake.listTagsUntilMutex.Unlock()
 	fake.ListTagsUntilStub = nil
 	fake.listTagsUntilReturns = struct {
-		result1 []*gitlab.Tag
+		result1 []*gitea.Tag
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeGitLab) ListTagsUntilReturnsOnCall(i int, result1 []*gitlab.Tag, result2 error) {
+func (fake *FakeGitea) ListTagsUntilReturnsOnCall(i int, result1 []*gitea.Tag, result2 error) {
 	fake.listTagsUntilMutex.Lock()
 	defer fake.listTagsUntilMutex.Unlock()
 	fake.ListTagsUntilStub = nil
 	if fake.listTagsUntilReturnsOnCall == nil {
 		fake.listTagsUntilReturnsOnCall = make(map[int]struct {
-			result1 []*gitlab.Tag
+			result1 []*gitea.Tag
 			result2 error
 		})
 	}
 	fake.listTagsUntilReturnsOnCall[i] = struct {
-		result1 []*gitlab.Tag
+		result1 []*gitea.Tag
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeGitLab) UpdateRelease(arg1 string, arg2 string) (*gitlab.Release, error) {
+func (fake *FakeGitea) UpdateRelease(arg1 string, arg2 string) (*gitea.Release, error) {
 	fake.updateReleaseMutex.Lock()
 	ret, specificReturn := fake.updateReleaseReturnsOnCall[len(fake.updateReleaseArgsForCall)]
 	fake.updateReleaseArgsForCall = append(fake.updateReleaseArgsForCall, struct {
@@ -507,52 +507,52 @@ func (fake *FakeGitLab) UpdateRelease(arg1 string, arg2 string) (*gitlab.Release
 	return fakeReturns.result1, fakeReturns.result2
 }
 
-func (fake *FakeGitLab) UpdateReleaseCallCount() int {
+func (fake *FakeGitea) UpdateReleaseCallCount() int {
 	fake.updateReleaseMutex.RLock()
 	defer fake.updateReleaseMutex.RUnlock()
 	return len(fake.updateReleaseArgsForCall)
 }
 
-func (fake *FakeGitLab) UpdateReleaseCalls(stub func(string, string) (*gitlab.Release, error)) {
+func (fake *FakeGitea) UpdateReleaseCalls(stub func(string, string) (*gitea.Release, error)) {
 	fake.updateReleaseMutex.Lock()
 	defer fake.updateReleaseMutex.Unlock()
 	fake.UpdateReleaseStub = stub
 }
 
-func (fake *FakeGitLab) UpdateReleaseArgsForCall(i int) (string, string) {
+func (fake *FakeGitea) UpdateReleaseArgsForCall(i int) (string, string) {
 	fake.updateReleaseMutex.RLock()
 	defer fake.updateReleaseMutex.RUnlock()
 	argsForCall := fake.updateReleaseArgsForCall[i]
 	return argsForCall.arg1, argsForCall.arg2
 }
 
-func (fake *FakeGitLab) UpdateReleaseReturns(result1 *gitlab.Release, result2 error) {
+func (fake *FakeGitea) UpdateReleaseReturns(result1 *gitea.Release, result2 error) {
 	fake.updateReleaseMutex.Lock()
 	defer fake.updateReleaseMutex.Unlock()
 	fake.UpdateReleaseStub = nil
 	fake.updateReleaseReturns = struct {
-		result1 *gitlab.Release
+		result1 *gitea.Release
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeGitLab) UpdateReleaseReturnsOnCall(i int, result1 *gitlab.Release, result2 error) {
+func (fake *FakeGitea) UpdateReleaseReturnsOnCall(i int, result1 *gitea.Release, result2 error) {
 	fake.updateReleaseMutex.Lock()
 	defer fake.updateReleaseMutex.Unlock()
 	fake.UpdateReleaseStub = nil
 	if fake.updateReleaseReturnsOnCall == nil {
 		fake.updateReleaseReturnsOnCall = make(map[int]struct {
-			result1 *gitlab.Release
+			result1 *gitea.Release
 			result2 error
 		})
 	}
 	fake.updateReleaseReturnsOnCall[i] = struct {
-		result1 *gitlab.Release
+		result1 *gitea.Release
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeGitLab) UploadProjectFile(arg1 string) (*gitlab.ProjectFile, error) {
+func (fake *FakeGitea) UploadProjectFile(arg1 string) (*gitea.ProjectFile, error) {
 	fake.uploadProjectFileMutex.Lock()
 	ret, specificReturn := fake.uploadProjectFileReturnsOnCall[len(fake.uploadProjectFileArgsForCall)]
 	fake.uploadProjectFileArgsForCall = append(fake.uploadProjectFileArgsForCall, struct {
@@ -570,52 +570,52 @@ func (fake *FakeGitLab) UploadProjectFile(arg1 string) (*gitlab.ProjectFile, err
 	return fakeReturns.result1, fakeReturns.result2
 }
 
-func (fake *FakeGitLab) UploadProjectFileCallCount() int {
+func (fake *FakeGitea) UploadProjectFileCallCount() int {
 	fake.uploadProjectFileMutex.RLock()
 	defer fake.uploadProjectFileMutex.RUnlock()
 	return len(fake.uploadProjectFileArgsForCall)
 }
 
-func (fake *FakeGitLab) UploadProjectFileCalls(stub func(string) (*gitlab.ProjectFile, error)) {
+func (fake *FakeGitea) UploadProjectFileCalls(stub func(string) (*gitea.ProjectFile, error)) {
 	fake.uploadProjectFileMutex.Lock()
 	defer fake.uploadProjectFileMutex.Unlock()
 	fake.UploadProjectFileStub = stub
 }
 
-func (fake *FakeGitLab) UploadProjectFileArgsForCall(i int) string {
+func (fake *FakeGitea) UploadProjectFileArgsForCall(i int) string {
 	fake.uploadProjectFileMutex.RLock()
 	defer fake.uploadProjectFileMutex.RUnlock()
 	argsForCall := fake.uploadProjectFileArgsForCall[i]
 	return argsForCall.arg1
 }
 
-func (fake *FakeGitLab) UploadProjectFileReturns(result1 *gitlab.ProjectFile, result2 error) {
+func (fake *FakeGitea) UploadProjectFileReturns(result1 *gitea.ProjectFile, result2 error) {
 	fake.uploadProjectFileMutex.Lock()
 	defer fake.uploadProjectFileMutex.Unlock()
 	fake.UploadProjectFileStub = nil
 	fake.uploadProjectFileReturns = struct {
-		result1 *gitlab.ProjectFile
+		result1 *gitea.ProjectFile
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeGitLab) UploadProjectFileReturnsOnCall(i int, result1 *gitlab.ProjectFile, result2 error) {
+func (fake *FakeGitea) UploadProjectFileReturnsOnCall(i int, result1 *gitea.ProjectFile, result2 error) {
 	fake.uploadProjectFileMutex.Lock()
 	defer fake.uploadProjectFileMutex.Unlock()
 	fake.UploadProjectFileStub = nil
 	if fake.uploadProjectFileReturnsOnCall == nil {
 		fake.uploadProjectFileReturnsOnCall = make(map[int]struct {
-			result1 *gitlab.ProjectFile
+			result1 *gitea.ProjectFile
 			result2 error
 		})
 	}
 	fake.uploadProjectFileReturnsOnCall[i] = struct {
-		result1 *gitlab.ProjectFile
+		result1 *gitea.ProjectFile
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeGitLab) Invocations() map[string][][]interface{} {
+func (fake *FakeGitea) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.createReleaseMutex.RLock()
@@ -641,7 +641,7 @@ func (fake *FakeGitLab) Invocations() map[string][][]interface{} {
 	return copiedInvocations
 }
 
-func (fake *FakeGitLab) recordInvocation(key string, args []interface{}) {
+func (fake *FakeGitea) recordInvocation(key string, args []interface{}) {
 	fake.invocationsMutex.Lock()
 	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
@@ -653,4 +653,4 @@ func (fake *FakeGitLab) recordInvocation(key string, args []interface{}) {
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ resource.GitLab = new(FakeGitLab)
+var _ resource.Gitea = new(FakeGitea)

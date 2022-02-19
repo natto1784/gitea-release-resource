@@ -1,4 +1,4 @@
-module github.com/edtan/gitlab-release-resource
+module github.com/natto1784/gitea-release-resource
 
 require (
 	github.com/concourse/github-release-resource v1.0.0

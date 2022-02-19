@@ -4,26 +4,26 @@ import (
 	"sort"
 
 	"github.com/cppforlife/go-semi-semantic/version"
-	"github.com/xanzy/go-gitlab"
+	"code.gitea.io/sdk/gitea"
 )
 
 type CheckCommand struct {
-	gitlab GitLab
+	gitea Gitea
 }
 
-func NewCheckCommand(gitlab GitLab) *CheckCommand {
+func NewCheckCommand(gitea Gitea) *CheckCommand {
 	return &CheckCommand{
-		gitlab: gitlab,
+		gitea: gitea,
 	}
 }
 
 func (c *CheckCommand) Run(request CheckRequest) ([]Version, error) {
-	var tags []*gitlab.Tag
+	var tags []*gitea.Tag
 	var err error
 	if (request.Version == Version{}) {
-		tags, err = c.gitlab.ListTags()
+		tags, err = c.gitea.ListTags()
 	} else {
-		tags, err = c.gitlab.ListTagsUntil(request.Version.Tag)
+		tags, err = c.gitea.ListTagsUntil(request.Version.Tag)
 	}
 
 	if err != nil {
@@ -34,7 +34,7 @@ func (c *CheckCommand) Run(request CheckRequest) ([]Version, error) {
 		return []Version{}, nil
 	}
 
-	var filteredTags []*gitlab.Tag
+	var filteredTags []*gitea.Tag
 
 	// TODO: make ListTagsUntil work better with this
 	versionParser, err := newVersionParser(request.Source.TagFilter)
@@ -47,9 +47,9 @@ func (c *CheckCommand) Run(request CheckRequest) ([]Version, error) {
 			continue
 		}
 
-		if tag.Release == nil {
+/*		if tag.Release == nil {
 			continue
-		}
+		}*/
 
 		filteredTags = append(filteredTags, tag)
 	}

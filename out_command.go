@@ -10,13 +10,13 @@ import (
 )
 
 type OutCommand struct {
-	gitlab GitLab
+	gitea Gitea
 	writer io.Writer
 }
 
-func NewOutCommand(gitlab GitLab, writer io.Writer) *OutCommand {
+func NewOutCommand(gitea Gitea, writer io.Writer) *OutCommand {
 	return &OutCommand{
-		gitlab: gitlab,
+		gitea: gitea,
 		writer: writer,
 	}
 }
@@ -44,7 +44,7 @@ func (c *OutCommand) Run(sourceDir string, request OutRequest) (OutResponse, err
 	// }
 
 	tagExists := true
-	tag, err := c.gitlab.GetTag(tag_name)
+	tag, err := c.gitea.GetTag(tag_name)
 	if err != nil {
 		//TODO: improve the check to be based on the specific error
 		tagExists = false
@@ -56,7 +56,7 @@ func (c *OutCommand) Run(sourceDir string, request OutRequest) (OutResponse, err
 		if err != nil {
 			return OutResponse{}, err
 		}
-		tag, err = c.gitlab.CreateTag(targetCommitish, tag_name)
+		tag, err = c.gitea.CreateTag(targetCommitish, tag_name)
 		if err != nil {
 			return OutResponse{}, err
 		}
@@ -64,7 +64,7 @@ func (c *OutCommand) Run(sourceDir string, request OutRequest) (OutResponse, err
 
 	// create a new release if it doesn't exist yet
 	if tag.Release == nil {
-		_, err = c.gitlab.CreateRelease(tag_name, "Auto-generated from Concourse GitLab Release Resource")
+		_, err = c.gitea.CreateRelease(tag_name, "Auto-generated from Concourse Gitea Release Resource")
 		if err != nil {
 			return OutResponse{}, err
 		}
@@ -83,7 +83,7 @@ func (c *OutCommand) Run(sourceDir string, request OutRequest) (OutResponse, err
 		}
 
 		for _, filePath := range matches {
-			projectFile, err := c.gitlab.UploadProjectFile(filePath)
+			projectFile, err := c.gitea.UploadProjectFile(filePath)
 			if err != nil {
 				return OutResponse{}, err
 			}
@@ -92,7 +92,7 @@ func (c *OutCommand) Run(sourceDir string, request OutRequest) (OutResponse, err
 	}
 
 	// update the release
-	_, err = c.gitlab.UpdateRelease(tag_name, strings.Join(fileLinks, "\n"))
+	_, err = c.gitea.UpdateRelease(tag_name, strings.Join(fileLinks, "\n"))
 	if err != nil {
 		return OutResponse{}, errors.New("could not get saved tag")
 	}

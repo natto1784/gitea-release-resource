@@ -4,35 +4,35 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/xanzy/go-gitlab"
+	"code.gitea.io/sdk/gitea"
 
-	"github.com/edtan/gitlab-release-resource"
-	"github.com/edtan/gitlab-release-resource/fakes"
+	"github.com/natto1784/gitea-release-resource"
+	"github.com/natto1784/gitea-release-resource/fakes"
 )
 
 var _ = Describe("Check Command", func() {
 	var (
-		gitlabClient *fakes.FakeGitLab
+		giteaClient *fakes.FakeGitea
 		command      *resource.CheckCommand
 
-		returnedTags []*gitlab.Tag
+		returnedTags []*gitea.Tag
 	)
 
 	BeforeEach(func() {
-		gitlabClient = &fakes.FakeGitLab{}
-		command = resource.NewCheckCommand(gitlabClient)
+		giteaClient = &fakes.FakeGitea{}
+		command = resource.NewCheckCommand(giteaClient)
 
-		returnedTags = []*gitlab.Tag{}
+		returnedTags = []*gitea.Tag{}
 	})
 
 	JustBeforeEach(func() {
-		gitlabClient.ListTagsReturns(returnedTags, nil)
+		giteaClient.ListTagsReturns(returnedTags, nil)
 	})
 
 	Context("when this is the first time that the resource has been run", func() {
 		Context("when there are no releases", func() {
 			BeforeEach(func() {
-				returnedTags = []*gitlab.Tag{}
+				returnedTags = []*gitea.Tag{}
 			})
 
 			It("returns no versions", func() {
@@ -44,7 +44,7 @@ var _ = Describe("Check Command", func() {
 
 		Context("when there are releases", func() {
 			BeforeEach(func() {
-				returnedTags = []*gitlab.Tag{
+				returnedTags = []*gitea.Tag{
 					newTag("v0.4.0", "abc123"),
 					newTag("0.1.3", "bdc234"),
 					newTag("v0.1.2", "cde345"),
@@ -52,7 +52,7 @@ var _ = Describe("Check Command", func() {
 			})
 
 			It("outputs the most recent version only", func() {
-				command := resource.NewCheckCommand(gitlabClient)
+				command := resource.NewCheckCommand(giteaClient)
 
 				response, err := command.Run(resource.CheckRequest{})
 				Ω(err).ShouldNot(HaveOccurred())
@@ -68,7 +68,7 @@ var _ = Describe("Check Command", func() {
 	Context("when there are prior versions", func() {
 		Context("when there are no releases", func() {
 			BeforeEach(func() {
-				returnedTags = []*gitlab.Tag{}
+				returnedTags = []*gitea.Tag{}
 			})
 
 			It("returns no versions", func() {
@@ -81,7 +81,7 @@ var _ = Describe("Check Command", func() {
 		Context("when there are releases", func() {
 			Context("and there is a custom tag filter", func() {
 				BeforeEach(func() {
-					returnedTags = []*gitlab.Tag{
+					returnedTags = []*gitea.Tag{
 						newTag("package-0.1.4", "abc123"),
 						newTag("package-0.4.0", "bcd234"),
 						newTag("package-0.1.3", "cde345"),
@@ -90,7 +90,7 @@ var _ = Describe("Check Command", func() {
 				})
 
 				It("returns all of the versions that are newer", func() {
-					command := resource.NewCheckCommand(gitlabClient)
+					command := resource.NewCheckCommand(giteaClient)
 
 					response, err := command.Run(resource.CheckRequest{
 						Version: resource.Version{
@@ -109,7 +109,7 @@ var _ = Describe("Check Command", func() {
 
 			Context("and the releases do not contain a draft release", func() {
 				BeforeEach(func() {
-					returnedTags = []*gitlab.Tag{
+					returnedTags = []*gitea.Tag{
 						newTag("v0.1.4", "abc123"),
 						newTag("0.4.0", "bcd234"),
 						newTag("v0.1.3", "cde345"),
@@ -118,7 +118,7 @@ var _ = Describe("Check Command", func() {
 				})
 
 				It("returns an empty list if the latest version has been checked", func() {
-					command := resource.NewCheckCommand(gitlabClient)
+					command := resource.NewCheckCommand(giteaClient)
 
 					response, err := command.Run(resource.CheckRequest{
 						Version: resource.Version{
@@ -131,7 +131,7 @@ var _ = Describe("Check Command", func() {
 				})
 
 				It("returns all of the versions that are newer", func() {
-					command := resource.NewCheckCommand(gitlabClient)
+					command := resource.NewCheckCommand(giteaClient)
 
 					response, err := command.Run(resource.CheckRequest{
 						Version: resource.Version{
@@ -148,7 +148,7 @@ var _ = Describe("Check Command", func() {
 				})
 
 				It("returns the latest version if the current version is not found", func() {
-					command := resource.NewCheckCommand(gitlabClient)
+					command := resource.NewCheckCommand(giteaClient)
 
 					response, err := command.Run(resource.CheckRequest{
 						Version: resource.Version{
@@ -169,7 +169,7 @@ var _ = Describe("Check Command", func() {
 					})
 
 					It("combines them with the semver versions in a reasonable order", func() {
-						command := resource.NewCheckCommand(gitlabClient)
+						command := resource.NewCheckCommand(giteaClient)
 
 						response, err := command.Run(resource.CheckRequest{
 							Version: resource.Version{

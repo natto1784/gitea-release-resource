@@ -8,11 +8,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/xanzy/go-gitlab"
+	"code.gitea.io/sdk/gitea"
 )
 
 type InCommand struct {
-	gitlab GitLab
+	gitea Gitea
 	writer io.Writer
 }
 
@@ -21,9 +21,9 @@ type attachment struct {
 	URL  string
 }
 
-func NewInCommand(gitlab GitLab, writer io.Writer) *InCommand {
+func NewInCommand(gitea Gitea, writer io.Writer) *InCommand {
 	return &InCommand{
-		gitlab: gitlab,
+		gitea: gitea,
 		writer: writer,
 	}
 }
@@ -34,9 +34,9 @@ func (c *InCommand) Run(destDir string, request InRequest) (InResponse, error) {
 		return InResponse{}, err
 	}
 
-	var foundTag *gitlab.Tag
+	var foundTag *gitea.Tag
 
-	foundTag, err = c.gitlab.GetTag(request.Version.Tag)
+	foundTag, err = c.gitea.GetTag(request.Version.Tag)
 	if err != nil {
 		return InResponse{}, err
 	}
@@ -108,7 +108,7 @@ func (c *InCommand) Run(destDir string, request InRequest) (InResponse, error) {
 			continue
 		}
 
-		err := c.gitlab.DownloadProjectFile(attachment.URL, path)
+		err := c.gitea.DownloadProjectFile(attachment.URL, path)
 		if err != nil {
 			return InResponse{}, err
 		}

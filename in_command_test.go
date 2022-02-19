@@ -11,17 +11,16 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/ghttp"
 
-	"github.com/xanzy/go-gitlab"
-
-	"github.com/edtan/gitlab-release-resource"
-	"github.com/edtan/gitlab-release-resource/fakes"
+	"code.gitea.io/sdk/gitea"
+	"github.com/natto1784/gitea-release-resource"
+	"github.com/natto1784/gitea-release-resource/fakes"
 )
 
 var _ = Describe("In Command", func() {
 	var (
-		command      *resource.InCommand
-		gitlabClient *fakes.FakeGitLab
-		gitlabServer *ghttp.Server
+		command     *resource.InCommand
+		giteaClient *fakes.FakeGitea
+		giteaServer *ghttp.Server
 
 		inRequest resource.InRequest
 
@@ -35,16 +34,16 @@ var _ = Describe("In Command", func() {
 	BeforeEach(func() {
 		var err error
 
-		gitlabClient = &fakes.FakeGitLab{}
-		gitlabServer = ghttp.NewServer()
-		command = resource.NewInCommand(gitlabClient, ioutil.Discard)
+		giteaClient = &fakes.FakeGitea{}
+		giteaServer = ghttp.NewServer()
+		command = resource.NewInCommand(giteaClient, ioutil.Discard)
 
-		tmpDir, err = ioutil.TempDir("", "gitlab-release")
+		tmpDir, err = ioutil.TempDir("", "gitea-release")
 		Ω(err).ShouldNot(HaveOccurred())
 
 		destDir = filepath.Join(tmpDir, "destination")
 
-		gitlabClient.DownloadProjectFileReturns(nil)
+		giteaClient.DownloadProjectFileReturns(nil)
 
 		inRequest = resource.InRequest{}
 	})
@@ -53,19 +52,19 @@ var _ = Describe("In Command", func() {
 		Ω(os.RemoveAll(tmpDir)).Should(Succeed())
 	})
 
-	buildTag := func(sha, tag string) *gitlab.Tag {
-		return &gitlab.Tag{
-			Commit: &gitlab.Commit{
-				ID: *gitlab.String(sha),
+	buildTag := func(sha, tag string) *gitea.Tag {
+		return &gitea.Tag{
+			Commit: &gitea.Commit{
+				ID: *gitea.String(sha),
 			},
-			Name: *gitlab.String(tag),
+			Name: *gitea.String(tag),
 		}
 	}
 
 	Context("when there is a tagged release", func() {
 		Context("when a present version is specified", func() {
 			BeforeEach(func() {
-				gitlabClient.GetTagReturns(buildTag("v0.35.0", "abc123"), nil)
+				giteaClient.GetTagReturns(buildTag("v0.35.0", "abc123"), nil)
 
 				inRequest.Version = &resource.Version{
 					Tag: "v0.35.0",
@@ -103,18 +102,18 @@ var _ = Describe("In Command", func() {
 				It("calls #GetTag with the correct arguments", func() {
 					command.Run(destDir, inRequest)
 
-					Ω(gitlabClient.GetTagArgsForCall(0)).Should(Equal("v0.35.0"))
+					Ω(giteaClient.GetTagArgsForCall(0)).Should(Equal("v0.35.0"))
 				})
 
 				It("downloads only the files that match the globs", func() {
 					inResponse, inErr = command.Run(destDir, inRequest)
 
-					Expect(gitlabClient.DownloadProjectFileCallCount()).To(Equal(2))
-					arg1, arg2 := gitlabClient.DownloadProjectFileArgsForCall(0)
+					Expect(giteaClient.DownloadProjectFileCallCount()).To(Equal(2))
+					arg1, arg2 := giteaClient.DownloadProjectFileArgsForCall(0)
 					Ω(arg1).Should(Equal("example.txt"))
 					Ω(arg2).Should(Equal("path"))
 
-					arg1, arg2 = gitlabClient.DownloadProjectFileArgsForCall(1)
+					arg1, arg2 = giteaClient.DownloadProjectFileArgsForCall(1)
 					Ω(arg1).Should(Equal("example.rtf"))
 					Ω(arg2).Should(Equal("path"))
 				})
@@ -144,7 +143,7 @@ var _ = Describe("In Command", func() {
 						inRequest.Source = resource.Source{
 							TagFilter: "package-(.*)",
 						}
-						gitlabClient.GetTagReturns(buildTag("package-0.35.0", "abc123"), nil)
+						giteaClient.GetTagReturns(buildTag("package-0.35.0", "abc123"), nil)
 						inResponse, inErr = command.Run(destDir, inRequest)
 					})
 
@@ -194,15 +193,15 @@ var _ = Describe("In Command", func() {
 				})
 
 				It("downloads all of the files", func() {
-					arg1, arg2 := gitlabClient.DownloadProjectFileArgsForCall(0)
+					arg1, arg2 := giteaClient.DownloadProjectFileArgsForCall(0)
 					Ω(arg1).Should(Equal("example.txt"))
 					Ω(arg2).Should(Equal("path"))
 
-					arg1, arg2 = gitlabClient.DownloadProjectFileArgsForCall(1)
+					arg1, arg2 = giteaClient.DownloadProjectFileArgsForCall(1)
 					Ω(arg1).Should(Equal("example.rtf"))
 					Ω(arg2).Should(Equal("path"))
 
-					arg1, arg2 = gitlabClient.DownloadProjectFileArgsForCall(2)
+					arg1, arg2 = giteaClient.DownloadProjectFileArgsForCall(2)
 					Ω(arg1).Should(Equal("example.rtf"))
 					Ω(arg2).Should(Equal("path"))
 				})
@@ -210,7 +209,7 @@ var _ = Describe("In Command", func() {
 
 			Context("when downloading an asset fails", func() {
 				BeforeEach(func() {
-					gitlabClient.DownloadProjectFileReturns(errors.New("not this time"))
+					giteaClient.DownloadProjectFileReturns(errors.New("not this time"))
 					inResponse, inErr = command.Run(destDir, inRequest)
 				})
 
@@ -223,7 +222,7 @@ var _ = Describe("In Command", func() {
 
 	Context("when no tagged release is present", func() {
 		BeforeEach(func() {
-			gitlabClient.GetTagReturns(nil, nil)
+			giteaClient.GetTagReturns(nil, nil)
 
 			inRequest.Version = &resource.Version{
 				Tag: "v0.40.0",
@@ -241,7 +240,7 @@ var _ = Describe("In Command", func() {
 		disaster := errors.New("nope")
 
 		BeforeEach(func() {
-			gitlabClient.GetTagReturns(nil, disaster)
+			giteaClient.GetTagReturns(nil, disaster)
 
 			inRequest.Version = &resource.Version{
 				Tag: "some-tag",

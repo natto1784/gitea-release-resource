@@ -15,30 +15,30 @@ import (
 
 	"context"
 
-	"github.com/xanzy/go-gitlab"
+  "code.gitea.io/sdk/gitea"
 )
 
-//go:generate counterfeiter . GitLab
+//go:generate counterfeiter . Gitea
 
-type GitLab interface {
-	ListTags() ([]*gitlab.Tag, error)
-	ListTagsUntil(tag_name string) ([]*gitlab.Tag, error)
-	GetTag(tag_name string) (*gitlab.Tag, error)
-	CreateTag(tag_name string, ref string) (*gitlab.Tag, error)
-	CreateRelease(tag_name string, description string) (*gitlab.Release, error)
-	UpdateRelease(tag_name string, description string) (*gitlab.Release, error)
-	UploadProjectFile(file string) (*gitlab.ProjectFile, error)
+type Gitea interface {
+	ListTags() ([]*gitea.Tag, error)
+	ListTagsUntil(tag_name string) ([]*gitea.Tag, error)
+	GetTag(tag_name string) (*gitea.Tag, error)
+	CreateTag(tag_name string, ref string) (*gitea.Tag, error)
+	CreateRelease(tag_name string, description string) (*gitea.Release, error)
+	UpdateRelease(tag_name string, description string) (*gitea.Release, error)
+	UploadProjectFile(file string) (*gitea.ProjectFile, error)
 	DownloadProjectFile(url, file string) error
 }
 
-type GitlabClient struct {
-	client *gitlab.Client
+type GiteaClient struct {
+	client *gitea.Client
 
 	accessToken string
 	repository  string
 }
 
-func NewGitLabClient(source Source) (*GitlabClient, error) {
+func NewGiteaClient(source Source) (*GiteaClient, error) {
 	var httpClient = &http.Client{}
 	var ctx = context.TODO()
 
@@ -49,40 +49,40 @@ func NewGitLabClient(source Source) (*GitlabClient, error) {
 		ctx = context.WithValue(ctx, oauth2.HTTPClient, httpClient)
 	}
 
-	client := gitlab.NewClient(httpClient, source.AccessToken)
+	client := gitea.NewClient(httpClient, source.AccessToken)
 
-	if source.GitLabAPIURL != "" {
+	if source.GiteaAPIURL != "" {
 		var err error
-		baseUrl, err := url.Parse(source.GitLabAPIURL)
+		baseUrl, err := url.Parse(source.GiteaAPIURL)
 		if err != nil {
 			return nil, err
 		}
 		client.SetBaseURL(baseUrl.String())
 	}
 
-	return &GitlabClient{
+	return &GiteaClient{
 		client:      client,
 		repository:  source.Repository,
 		accessToken: source.AccessToken,
 	}, nil
 }
 
-func (g *GitlabClient) ListTags() ([]*gitlab.Tag, error) {
-	var allTags []*gitlab.Tag
+func (g *GiteaClient) ListTags() ([]*gitea.Tag, error) {
+	var allTags []*gitea.Tag
 
-	opt := &gitlab.ListTagsOptions{
-		ListOptions: gitlab.ListOptions{
+	opt := &gitea.ListTagsOptions{
+		ListOptions: gitea.ListOptions{
 			PerPage: 100,
 			Page:    1,
 		},
-		OrderBy: gitlab.String("updated"),
-		Sort:    gitlab.String("desc"),
+		OrderBy: gitea.String("updated"),
+		Sort:    gitea.String("desc"),
 	}
 
 	for {
 		tags, res, err := g.client.Tags.ListTags(g.repository, opt)
 		if err != nil {
-			return []*gitlab.Tag{}, err
+			return []*gitea.Tag{}, err
 		}
 
 		allTags = append(allTags, tags...)
@@ -97,25 +97,25 @@ func (g *GitlabClient) ListTags() ([]*gitlab.Tag, error) {
 	return allTags, nil
 }
 
-func (g *GitlabClient) ListTagsUntil(tag_name string) ([]*gitlab.Tag, error) {
-	var allTags []*gitlab.Tag
+func (g *GiteaClient) ListTagsUntil(tag_name string) ([]*gitea.Tag, error) {
+	var allTags []*gitea.Tag
 
 	pageSize := 100
 
-	opt := &gitlab.ListTagsOptions{
-		ListOptions: gitlab.ListOptions{
+	opt := &gitea.ListTagsOptions{
+		ListOptions: gitea.ListOptions{
 			PerPage: pageSize,
 			Page:    1,
 		},
-		OrderBy: gitlab.String("updated"),
-		Sort:    gitlab.String("desc"),
+		OrderBy: gitea.String("updated"),
+		Sort:    gitea.String("desc"),
 	}
 
-	var foundTag *gitlab.Tag
+	var foundTag *gitea.Tag
 	for {
 		tags, res, err := g.client.Tags.ListTags(g.repository, opt)
 		if err != nil {
-			return []*gitlab.Tag{}, err
+			return []*gitea.Tag{}, err
 		}
 
 		skipToNextPage := false
@@ -167,10 +167,10 @@ func (g *GitlabClient) ListTagsUntil(tag_name string) ([]*gitlab.Tag, error) {
 	return allTags, nil
 }
 
-func (g *GitlabClient) GetTag(tag_name string) (*gitlab.Tag, error) {
+func (g *GiteaClient) GetTag(tag_name string) (*gitea.Tag, error) {
 	tag, res, err := g.client.Tags.GetTag(g.repository, tag_name)
 	if err != nil {
-		return &gitlab.Tag{}, err
+		return &gitea.Tag{}, err
 	}
 
 	err = res.Body.Close()
@@ -181,16 +181,16 @@ func (g *GitlabClient) GetTag(tag_name string) (*gitlab.Tag, error) {
 	return tag, nil
 }
 
-func (g *GitlabClient) CreateTag(ref string, tag_name string) (*gitlab.Tag, error) {
-	opt := &gitlab.CreateTagOptions{
-		TagName: gitlab.String(tag_name),
-		Ref:     gitlab.String(ref),
-		Message: gitlab.String(tag_name),
+func (g *GiteaClient) CreateTag(ref string, tag_name string) (*gitea.Tag, error) {
+	opt := &gitea.CreateTagOptions{
+		TagName: gitea.String(tag_name),
+		Ref:     gitea.String(ref),
+		Message: gitea.String(tag_name),
 	}
 
 	tag, res, err := g.client.Tags.CreateTag(g.repository, opt)
 	if err != nil {
-		return &gitlab.Tag{}, err
+		return &gitea.Tag{}, err
 	}
 
 	err = res.Body.Close()
@@ -201,17 +201,17 @@ func (g *GitlabClient) CreateTag(ref string, tag_name string) (*gitlab.Tag, erro
 	return tag, nil
 }
 
-func (g *GitlabClient) CreateRelease(tag_name string, description string) (*gitlab.Release, error) {
-	opt := &gitlab.CreateReleaseOptions{
-		Description: gitlab.String(description),
+func (g *GiteaClient) CreateRelease(tag_name string, description string) (*gitea.Release, error) {
+	opt := &gitea.CreateReleaseOptions{
+		Description: gitea.String(description),
 	}
 
 	release, res, err := g.client.Tags.CreateRelease(g.repository, tag_name, opt)
 	if err != nil {
-		return &gitlab.Release{}, err
+		return &gitea.Release{}, err
 	}
 
-	// https://docs.gitlab.com/ce/api/tags.html#create-a-new-release
+	// https://docs.gitea.com/ce/api/tags.html#create-a-new-release
 	// returns 409 if release already exists
 	if res.StatusCode == http.StatusConflict {
 		return nil, errors.New("release already exists")
@@ -225,14 +225,14 @@ func (g *GitlabClient) CreateRelease(tag_name string, description string) (*gitl
 	return release, nil
 }
 
-func (g *GitlabClient) UpdateRelease(tag_name string, description string) (*gitlab.Release, error) {
-	opt := &gitlab.UpdateReleaseOptions{
-		Description: gitlab.String(description),
+func (g *GiteaClient) UpdateRelease(tag_name string, description string) (*gitea.Release, error) {
+	opt := &gitea.UpdateReleaseOptions{
+		Description: gitea.String(description),
 	}
 
 	release, res, err := g.client.Tags.UpdateRelease(g.repository, tag_name, opt)
 	if err != nil {
-		return &gitlab.Release{}, err
+		return &gitea.Release{}, err
 	}
 
 	err = res.Body.Close()
@@ -243,10 +243,10 @@ func (g *GitlabClient) UpdateRelease(tag_name string, description string) (*gitl
 	return release, nil
 }
 
-func (g *GitlabClient) UploadProjectFile(file string) (*gitlab.ProjectFile, error) {
+func (g *GiteaClient) UploadProjectFile(file string) (*gitea.ProjectFile, error) {
 	projectFile, res, err := g.client.Projects.UploadFile(g.repository, file)
 	if err != nil {
-		return &gitlab.ProjectFile{}, err
+		return &gitea.ProjectFile{}, err
 	}
 
 	err = res.Body.Close()
@@ -257,7 +257,7 @@ func (g *GitlabClient) UploadProjectFile(file string) (*gitlab.ProjectFile, erro
 	return projectFile, nil
 }
 
-func (g *GitlabClient) DownloadProjectFile(filePath, destPath string) error {
+func (g *GiteaClient) DownloadProjectFile(filePath, destPath string) error {
 	out, err := os.Create(destPath)
 	if err != nil {
 		return err
@@ -270,10 +270,10 @@ func (g *GitlabClient) DownloadProjectFile(filePath, destPath string) error {
 		return err
 	}
 
-	// e.g. (https://gitlab-instance/api/v4) + (/group/project/uploads/hash/filename)
+	// e.g. (https://gitea-instance/api/v4) + (/group/project/uploads/hash/filename)
 	projectFileUrl := g.client.BaseURL().ResolveReference(filePathRef)
 
-	// https://gitlab.com/gitlab-org/gitlab-ce/issues/51447
+	// https://gitea.com/gitea-org/gitea-ce/issues/51447
 	nonApiUrl := strings.Replace(projectFileUrl.String(), "/api/v4", "", 1)
 	projectFileUrl, err = url.Parse(nonApiUrl)
 	if err != nil {

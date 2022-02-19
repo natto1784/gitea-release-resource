@@ -5,19 +5,19 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/xanzy/go-gitlab"
+	"code.gitea.io/sdk/gitea"
 )
 
 func TestGithubReleaseResource(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "GitLab Release Resource Suite")
+	RunSpecs(t, "Gitea Release Resource Suite")
 }
 
-func newTag(name, sha string) *gitlab.Tag {
-	return &gitlab.Tag{
-		Commit: &gitlab.Commit{
-			ID: *gitlab.String(sha),
+func newTag(name, sha string) *gitea.Tag {
+	return &gitea.Tag{
+		Commit: &gitea.Commit{
+			ID: *gitea.String(sha),
 		},
-		Name: *gitlab.String(name),
+		Name: *gitea.String(name),
 	}
 }

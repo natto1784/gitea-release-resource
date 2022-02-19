@@ -1,6 +1,6 @@
 package resource
 
-import "github.com/xanzy/go-gitlab"
+import "code.gitea.io/sdk/gitea"
 
 func metadataFromTag(tag *gitlab.Tag) []MetadataPair {
 	metadata := []MetadataPair{}
