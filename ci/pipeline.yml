@@ -1,0 +1,51 @@
+resources:
+- name: resource-repo
+  type: git
+  icon: git
+  source:
+    uri: https://github.com/natto1784/gitea-release-resource.git
+    branch: master
+
+- name: target-image
+  type: registry-image
+  icon: docker
+  source:
+    repository: ((docker.user))/concourse-nomad-resource
+    tag: latest
+    username: ((docker.user))
+    password: ((docker.pass))
+
+jobs:
+- name: configure-self
+  public: true
+  plan:
+  - get: resource-repo
+    trigger: true
+  - set_pipeline: self
+    file: resource-repo/ci/pipeline.yml
+- name: build-and-push
+  plan:
+  - get: resource-repo
+    trigger: true
+    passed: [configure-self]
+  - task: build-image
+    privileged: true
+    config:
+      caches:
+      - path: cache
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: rdclda/concourse-oci-build-task
+      inputs:
+      - name: resource-repo
+      outputs:
+      - name: image
+      params:
+        CONTEXT: resource-repo
+      run:
+        path: build
+  - put: target-image
+    params:
+      image: image/image.tar
