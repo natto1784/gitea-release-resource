@@ -1,9 +1,11 @@
-# GitLab Releases Resource
+[![Concourse CI](https://ci.weirdnatto.in/api/v1/teams/main/pipelines/gitea-release-resource/badge)](https://ci.weirdnatto.in/teams/main/pipelines/gitea-release-resource) [![Docker](https://img.shields.io/docker/image-size/natto17/gitea-release-resource.svg)](https://hub.docker.com/repository/docker/natto17/gitea-release-resorce)
+# WIP
+Forked from https://github.com/edtan/gitlab-release-resource
 
-**This resource is no longer maintained.  A newer, updated GitLab releases
-resource is available at https://github.com/orange-cloudfoundry/gitlab-release-resource.**
 
-Fetches and creates versioned GitLab resources.  GitLab resources are metadata attached to tags.  Note that `check` will skip tags that do not have associated resources.
+# Gitea Releases Resource
+
+Fetches and creates versioned Gitea resources.  GitLab resources are metadata attached to tags.  Note that `check` will skip tags that do not have associated resources.
 
 Note that this is still in development, and is still undergoing changes.  It may or may not work properly at the moment, but should hopefully be somewhat more stable soon.
 
@@ -17,11 +19,11 @@ You may want to clean up your uploads folder over time if you re-run a put step 
    during an `in` and pushing a release to a repo during an `out`. The access
    token you create is only required to have the `repo` or `public_repo` scope.
 
-* `gitlab_api_url`: *Optional.* If you use a non-public GitLab deployment then
+* `gitea_api_url`: *Optional.* If you use a non-public Gitea deployment then
   you can set your API URL here.
 
 * `insecure`: *Optional. Default `false`.* When set to `true`, concourse will allow
-  insecure connection to your gitlab API.
+  insecure connection to your gitea API.
 
 * `tag_filter`: *Optional.* If set, override default tag filter regular
   expression of `v?([^v].*)`. If the filter includes a capture group, the capture
@@ -32,7 +34,7 @@ You may want to clean up your uploads folder over time if you re-run a put step 
 
 ``` yaml
 - name: gl-release
-  type: gitlab-release
+  type: gitea-release
   source:
     repository: group/project
     access_token: abcdef1234567890
@@ -62,7 +64,7 @@ To set a custom tag filter:
 
 ```yaml
 - name: gl-release
-  type: gitlab-release
+  type: gitea-release
   source:
     owner: concourse
     repository: concourse
@@ -96,7 +98,7 @@ Also creates the following files:
 
 ### `out`: Publish a release.
 
-Given a `commit_sha` and  `tag`, this tags the commit and creates a release on GitLab, then uploads the files
+Given a `commit_sha` and  `tag`, this tags the commit and creates a release on Gitea, then uploads the files
 matching the patterns in `globs` to the release.
 
 #### Parameters
@@ -135,7 +137,7 @@ will stop the build.
 Run the tests with the following command:
 
 ```sh
-docker build -t gitlab-release-resource .
+docker build -t gitea-release-resource .
 ```
 
 ### Contributing
