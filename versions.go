@@ -31,9 +31,9 @@ func (vp *versionParser) parse(tag string) string {
 	return ""
 }
 
-func versionFromTag(tag *gitea.Tag) Version {
+func versionFromTag(release *gitea.Release) Version {
 	return Version{
-		Tag:       tag.Name,
-		CommitSHA: tag.Commit.ID,
+		Tag:       release.TagName,
+		CommitSHA: release.Target,
 	}
 }

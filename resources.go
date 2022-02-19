@@ -4,8 +4,8 @@ type Source struct {
 	Repository string `json:"repository"`
 
 	GiteaAPIURL string `json:"gitea_api_url"`
-	AccessToken  string `json:"access_token"`
-	Insecure     bool   `json:"insecure"`
+	AccessToken string `json:"access_token"`
+	Insecure    bool   `json:"insecure"`
 
 	TagFilter string `json:"tag_filter"`
 }

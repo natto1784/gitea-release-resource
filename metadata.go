@@ -2,30 +2,30 @@ package resource
 
 import "code.gitea.io/sdk/gitea"
 
-func metadataFromTag(tag *gitea.Tag) []MetadataPair {
+func metadataFromTag(release *gitea.Release) []MetadataPair {
 	metadata := []MetadataPair{}
 
-	if tag.Name != "" {
+	if release.TagName != "" {
 		nameMeta := MetadataPair{
 			Name:  "tag",
-			Value: tag.Name,
+			Value: release.TagName,
 		}
 
 		metadata = append(metadata, nameMeta)
 	}
 
-	if tag.Release != nil && tag.Release.Description != "" {
+	if release != nil && release.Note != "" {
 		metadata = append(metadata, MetadataPair{
 			Name:     "body",
-			Value:    tag.Release.Description,
+			Value:    release.Note,
 			Markdown: true,
 		})
 	}
 
-	if tag.Commit != nil && tag.Commit.ID != "" {
+	if release != nil && release.Target != "" {
 		metadata = append(metadata, MetadataPair{
 			Name:  "commit_sha",
-			Value: tag.Commit.ID,
+			Value: release.Target,
 		})
 	}
 	return metadata

@@ -7,18 +7,16 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"strings"
-
-	"code.gitea.io/sdk/gitea"
 )
 
 type OutCommand struct {
-	gitea Gitea
+	gitea  Gitea
 	writer io.Writer
 }
 
 func NewOutCommand(gitea Gitea, writer io.Writer) *OutCommand {
 	return &OutCommand{
-		gitea: gitea,
+		gitea:  gitea,
 		writer: writer,
 	}
 }
@@ -45,28 +43,10 @@ func (c *OutCommand) Run(sourceDir string, request OutRequest) (OutResponse, err
 	// 	}
 	// }
 
-	tagExists := true
-	tag, err := c.gitea.GetTag(tag_name)
-	if err != nil {
-		//TODO: improve the check to be based on the specific error
-		tagExists = false
-	}
+	release, release_id, err := c.gitea.GetReleaseByTag(tag_name)
 
-	// create the tag first, as next sections assume the tag exists
-	if !tagExists {
-		targetCommitish, err := c.fileContents(filepath.Join(sourceDir, request.Params.CommitishPath))
-		if err != nil {
-			return OutResponse{}, err
-		}
-		tag, err = c.gitea.CreateTag(targetCommitish, tag_name)
-		if err != nil {
-			return OutResponse{}, err
-		}
-	}
-
-	// create a new release if it doesn't exist yet
-	if tag.Release == nil {
-		_, err = c.gitea.CreateRelease(tag_name, "Auto-generated from Concourse Gitea Release Resource")
+	if release == nil {
+		_, release_id, err = c.gitea.CreateRelease(tag_name, "Auto-generated from Concourse Gitea Release Resource")
 		if err != nil {
 			return OutResponse{}, err
 		}
@@ -85,23 +65,23 @@ func (c *OutCommand) Run(sourceDir string, request OutRequest) (OutResponse, err
 		}
 
 		for _, filePath := range matches {
-			projectFile, err := gitea.CreateReleaseAttachment(filePath)
+			attachment, err := c.gitea.CreateAttachment(filePath, release_id)
 			if err != nil {
 				return OutResponse{}, err
 			}
-			fileLinks = append(fileLinks, projectFile.Markdown)
+			fileLinks = append(fileLinks, attachment.Name)
 		}
 	}
 
 	// update the release
-	_, err = c.gitea.UpdateRelease(tag_name, strings.Join(fileLinks, "\n"))
+	_, err = c.gitea.EditRelease(tag_name, release_id, strings.Join(fileLinks, "\n"))
 	if err != nil {
 		return OutResponse{}, errors.New("could not get saved tag")
 	}
 
 	return OutResponse{
-		Version:  versionFromTag(tag),
-		Metadata: metadataFromTag(tag),
+		Version:  versionFromTag(release),
+		Metadata: metadataFromTag(release),
 	}, nil
 }
 

@@ -2,9 +2,15 @@ package resource
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"golang.org/x/oauth2"
 
@@ -13,20 +19,23 @@ import (
 	"code.gitea.io/sdk/gitea"
 )
 
-
 type Gitea interface {
 	ListTags() ([]*gitea.Tag, error)
 	ListTagsUntil(tag_name string) ([]*gitea.Tag, error)
 	GetTag(tag_name string) (*gitea.Tag, error)
 	CreateTag(tag_name string, ref string) (*gitea.Tag, error)
-	CreateRelease(tag_name string, description string) (*gitea.Release, error)
-	UpdateRelease(tag_name string, description string) (*gitea.Release, error)
+	GetReleaseByTag(tag_name string) (*gitea.Release, int64, error)
+	CreateRelease(tag_name string, description string) (*gitea.Release, int64, error)
+	EditRelease(tag_name string, release_id int64, description string) (*gitea.Release, error)
+	CreateAttachment(filePath string, release_id int64) (*gitea.Attachment, error)
+	GetAttachment(filePath, destPath string) error
 }
 
 type GiteaClient struct {
-	client *gitea.Client
-
+	client      *gitea.Client
+	baseUrl     *url.URL
 	accessToken string
+	user        string
 	repository  string
 }
 
@@ -51,9 +60,12 @@ func NewGiteaClient(source Source) (*GiteaClient, error) {
 		return nil, err
 	}
 
+	split := strings.SplitN(source.Repository, "/", 2)
 	return &GiteaClient{
 		client:      client,
-		repository:  source.Repository,
+		baseUrl:     baseUrl,
+		user:        split[0],
+		repository:  split[1],
 		accessToken: source.AccessToken,
 	}, nil
 }
@@ -61,28 +73,27 @@ func NewGiteaClient(source Source) (*GiteaClient, error) {
 func (g *GiteaClient) ListTags() ([]*gitea.Tag, error) {
 	var allTags []*gitea.Tag
 
-	opt := &gitea.ListTagsOptions{
+	opt := gitea.ListRepoTagsOptions{
 		ListOptions: gitea.ListOptions{
-			PerPage: 100,
-			Page:    1,
+			PageSize: 100,
+			Page:     1,
 		},
-		OrderBy: gitea.String("updated"),
-		Sort:    gitea.String("desc"),
 	}
 
 	for {
-		tags, res, err := g.client.Tags.ListTags(g.repository, opt)
+		tags, _, err := g.client.ListRepoTags(g.user, g.repository, opt)
+
+		if len(tags) == 0 {
+			break
+		}
+
 		if err != nil {
 			return []*gitea.Tag{}, err
 		}
 
 		allTags = append(allTags, tags...)
 
-		if opt.Page >= res.TotalPages {
-			break
-		}
-
-		opt.Page = res.NextPage
+		opt.Page++
 	}
 
 	return allTags, nil
@@ -93,28 +104,29 @@ func (g *GiteaClient) ListTagsUntil(tag_name string) ([]*gitea.Tag, error) {
 
 	pageSize := 100
 
-	opt := &gitea.ListTagsOptions{
+	opt := gitea.ListRepoTagsOptions{
 		ListOptions: gitea.ListOptions{
-			PerPage: pageSize,
-			Page:    1,
+			PageSize: pageSize,
+			Page:     1,
 		},
-		OrderBy: gitea.String("updated"),
-		Sort:    gitea.String("desc"),
 	}
 
 	var foundTag *gitea.Tag
 	for {
-		tags, res, err := g.client.Tags.ListTags(g.repository, opt)
+		tags, _, err := g.client.ListRepoTags(g.user, g.repository, opt)
+
+		if len(tags) == 0 {
+			break
+		}
+
 		if err != nil {
 			return []*gitea.Tag{}, err
 		}
 
 		skipToNextPage := false
 		for i, tag := range tags {
-			// Some tags might have the same date - if they all have the same date, take
-			// all of them
 			if foundTag != nil {
-				if foundTag.Commit.CommittedDate.Equal(*tag.Commit.CommittedDate) {
+				if foundTag.Commit.Created.Format("2006-01-02") == tag.Commit.Created.Format("2006-01-02") {
 					allTags = append(allTags, tag)
 					if i == (pageSize - 1) {
 						skipToNextPage = true
@@ -134,11 +146,7 @@ func (g *GiteaClient) ListTagsUntil(tag_name string) ([]*gitea.Tag, error) {
 			}
 		}
 		if skipToNextPage {
-			if opt.Page >= res.TotalPages {
-				break
-			}
-
-			opt.Page = res.NextPage
+			opt.Page++
 			continue
 		}
 
@@ -148,18 +156,14 @@ func (g *GiteaClient) ListTagsUntil(tag_name string) ([]*gitea.Tag, error) {
 
 		allTags = append(allTags, tags...)
 
-		if opt.Page >= res.TotalPages {
-			break
-		}
-
-		opt.Page = res.NextPage
+		opt.Page++
 	}
 
 	return allTags, nil
 }
 
 func (g *GiteaClient) GetTag(tag_name string) (*gitea.Tag, error) {
-	tag, res, err := g.client.Tags.GetTag(g.repository, tag_name)
+	tag, res, err := g.client.GetTag(g.user, g.repository, tag_name)
 	if err != nil {
 		return &gitea.Tag{}, err
 	}
@@ -173,13 +177,13 @@ func (g *GiteaClient) GetTag(tag_name string) (*gitea.Tag, error) {
 }
 
 func (g *GiteaClient) CreateTag(ref string, tag_name string) (*gitea.Tag, error) {
-	opt := &gitea.CreateTagOptions{
-		TagName: gitea.String(tag_name),
-		Ref:     gitea.String(ref),
-		Message: gitea.String(tag_name),
+	opt := gitea.CreateTagOption{
+		TagName: tag_name,
+		Message: tag_name,
+		Target:  ref,
 	}
 
-	tag, res, err := g.client.Tags.CreateTag(g.repository, opt)
+	tag, res, err := g.client.CreateTag(g.user, g.repository, opt)
 	if err != nil {
 		return &gitea.Tag{}, err
 	}
@@ -192,20 +196,55 @@ func (g *GiteaClient) CreateTag(ref string, tag_name string) (*gitea.Tag, error)
 	return tag, nil
 }
 
-func (g *GiteaClient) CreateRelease(tag_name string, description string) (*gitea.Release, error) {
-	opt := &gitea.CreateReleaseOptions{
-		Description: gitea.String(description),
+type ReleaseResp struct {
+	id int64 `json:"id"`
+}
+
+func (g *GiteaClient) GetReleaseByTag(tag_name string) (*gitea.Release, int64, error) {
+	release, res, err := g.client.GetReleaseByTag(g.user, g.repository, tag_name)
+
+	if err != nil {
+		return &gitea.Release{}, 0, err
+	}
+	defer res.Body.Close()
+
+	response := ReleaseResp{}
+	json.NewDecoder(res.Body).Decode(response)
+	return release, response.id, nil
+}
+
+func (g *GiteaClient) CreateRelease(tag_name string, description string) (*gitea.Release, int64, error) {
+	opt := gitea.CreateReleaseOption{
+		Note:    description,
+		TagName: tag_name,
 	}
 
-	release, res, err := g.client.Tags.CreateRelease(g.repository, tag_name, opt)
+	release, res, err := g.client.CreateRelease(g.user, g.repository, opt)
+	if err != nil {
+		return &gitea.Release{}, 0, err
+	}
+
+	if res.StatusCode == http.StatusConflict {
+		return nil, 0, errors.New("release already exists")
+	}
+
+	defer res.Body.Close()
+
+	response := ReleaseResp{}
+	json.NewDecoder(res.Body).Decode(response)
+	return release, response.id, nil
+}
+
+func (g *GiteaClient) EditRelease(tag_name string, release_id int64, description string) (*gitea.Release, error) {
+
+	opt := gitea.EditReleaseOption{
+		Note:    description,
+		TagName: tag_name,
+	}
+
+	release, res, err := g.client.EditRelease(g.user, g.repository, release_id, opt)
 	if err != nil {
 		return &gitea.Release{}, err
-	}
-
-	// https://docs.gitea.com/ce/api/tags.html#create-a-new-release
-	// returns 409 if release already exists
-	if res.StatusCode == http.StatusConflict {
-		return nil, errors.New("release already exists")
 	}
 
 	err = res.Body.Close()
@@ -216,20 +255,51 @@ func (g *GiteaClient) CreateRelease(tag_name string, description string) (*gitea
 	return release, nil
 }
 
-func (g *GiteaClient) UpdateRelease(tag_name string, description string) (*gitea.Release, error) {
-	opt := &gitea.UpdateReleaseOptions{
-		Description: gitea.String(description),
-	}
-
-	release, res, err := g.client.Tags.UpdateRelease(g.repository, tag_name, opt)
+func (g *GiteaClient) CreateAttachment(filePath string, release_id int64) (*gitea.Attachment, error) {
+	f, err := os.Open(filePath)
 	if err != nil {
-		return &gitea.Release{}, err
+		return &gitea.Attachment{}, err
 	}
+	var file io.Reader
+	file = f
+	attachment, _, err := g.client.CreateReleaseAttachment(g.user, g.repository, release_id, file, filepath.Base(filePath))
+	return attachment, err
+}
 
-	err = res.Body.Close()
+func (g *GiteaClient) GetAttachment(filePath, destPath string) error {
+	out, err := os.Create(destPath)
 	if err != nil {
-		return nil, err
+		return err
+	}
+	defer out.Close()
+
+	filePathRef, err := url.Parse(g.repository + filePath)
+	if err != nil {
+		return err
 	}
 
-	return release, nil
+	projectFileUrl := g.baseUrl.ResolveReference(filePathRef)
+
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", projectFileUrl.String(), nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Add("Authorization", "token "+g.accessToken)
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to download file `%s`: HTTP status %d", filepath.Base(destPath), resp.StatusCode)
+	}
+
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

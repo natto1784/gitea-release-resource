@@ -63,13 +63,19 @@ func (c *InCommand) Run(destDir string, request InRequest) (InResponse, error) {
 	}
 
 	commitPath := filepath.Join(destDir, "commit_sha")
-	err = ioutil.WriteFile(commitPath, []byte(foundTag.Commit.ID), 0644)
+	err = ioutil.WriteFile(commitPath, []byte(foundTag.Commit.SHA), 0644)
+	if err != nil {
+		return InResponse{}, err
+	}
+	var release *gitea.Release
+	release, _, err = c.gitea.GetReleaseByTag(request.Version.Tag)
+
 	if err != nil {
 		return InResponse{}, err
 	}
 
-	if foundTag.Release != nil && foundTag.Release.Description != "" {
-		body := foundTag.Release.Description
+	if release != nil && release.Note != "" {
+		body := release.Note
 		bodyPath := filepath.Join(destDir, "body")
 		err = ioutil.WriteFile(bodyPath, []byte(body), 0644)
 		if err != nil {
@@ -79,12 +85,7 @@ func (c *InCommand) Run(destDir string, request InRequest) (InResponse, error) {
 		return InResponse{}, errors.New("release notes for the tag was empty")
 	}
 
-	attachments, err := c.getAttachments(foundTag.Release.Description)
-	if err != nil {
-		return InResponse{}, err
-	}
-
-	for _, attachment := range attachments {
+	for _, attachment := range release.Attachments {
 		path := filepath.Join(destDir, attachment.Name)
 
 		var matchFound bool
@@ -108,15 +109,15 @@ func (c *InCommand) Run(destDir string, request InRequest) (InResponse, error) {
 			continue
 		}
 
-		err := gitea.GetReleaseAttachment(attachment.URL, path)
+		err := c.gitea.GetAttachment(attachment.DownloadURL, path)
 		if err != nil {
 			return InResponse{}, err
 		}
 	}
 
 	return InResponse{
-		Version:  versionFromTag(foundTag),
-		Metadata: metadataFromTag(foundTag),
+		Version:  versionFromTag(release),
+		Metadata: metadataFromTag(release),
 	}, nil
 }
 
