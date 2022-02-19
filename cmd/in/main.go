@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/edtan/gitlab-release-resource"
+	"github.com/natto1784/gitea-release-resource"
 )
 
 func main() {
@@ -18,12 +18,12 @@ func main() {
 
 	destDir := os.Args[1]
 
-	gitlab, err := resource.NewGitLabClient(request.Source)
+	gitea, err := resource.NewGiteaClient(request.Source)
 	if err != nil {
-		resource.Fatal("constructing gitlab client", err)
+		resource.Fatal("constructing gitea client", err)
 	}
 
-	command := resource.NewInCommand(gitlab, os.Stderr)
+	command := resource.NewInCommand(gitea, os.Stderr)
 	response, err := command.Run(destDir, request)
 	if err != nil {
 		resource.Fatal("running command", err)
